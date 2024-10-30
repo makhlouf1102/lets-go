@@ -1,0 +1,6 @@
+.env
+bin/
+go.sum
+*.exe
+
+
