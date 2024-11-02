@@ -13,7 +13,6 @@
             <div class="text-center lg:text-left lg:ml-8">
                 <h1 class="text-5xl font-bold">Login</h1>
                 <p class="py-6">Start coding right away in your browser. Access all your projects and settings.</p>
-                <!-- Demo credentials with copy buttons -->
                 <div class="bg-base-300 p-4 rounded-lg">
                     <p class="font-semibold mb-2">Demo Account:</p>
                     <div class="flex flex-col gap-2">
@@ -22,6 +21,7 @@
                             <button class="btn btn-xs btn-ghost tooltip" 
                                     data-tip="Copy"
                                     onclick="navigator.clipboard.writeText('test@test.com')">
+                                <!-- Copy icon SVG -->
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-3.375c0-.621.504-1.125 1.125-1.125h3.375c.621 0 1.125.504 1.125 1.125v3.375c0 .621-.504 1.125-1.125 1.125Z" />
                                 </svg>
@@ -32,6 +32,7 @@
                             <button class="btn btn-xs btn-ghost tooltip" 
                                     data-tip="Copy"
                                     onclick="navigator.clipboard.writeText('test')">
+                                <!-- Copy icon SVG -->
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-3.375c0-.621.504-1.125 1.125-1.125h3.375c.621 0 1.125.504 1.125 1.125v3.375c0 .621-.504 1.125-1.125 1.125Z" />
                                 </svg>
@@ -41,31 +42,65 @@
                 </div>
             </div>
             <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-                <form class="card-body">
+                <div class="card-body">
                     <div class="form-control">
                         <label class="label">
                             <span class="label-text">Email</span>
                         </label>
-                        <input type="email" placeholder="email" class="input input-bordered" required />
+                        <input type="email" id="email" placeholder="email" class="input input-bordered" required />
                     </div>
                     <div class="form-control">
                         <label class="label">
                             <span class="label-text">Password</span>
                         </label>
-                        <input type="password" placeholder="password" class="input input-bordered" required />
+                        <input type="password" id="password" placeholder="password" class="input input-bordered" required />
                         <label class="label">
                             <a href="#" class="label-text-alt link link-hover">Forgot password?</a>
                         </label>
                     </div>
                     <div class="form-control mt-6">
-                        <button class="btn btn-primary">Login</button>
+                        <button class="btn btn-primary" id="loginBtn">Login</button>
                     </div>
                     <div class="text-center mt-2">
                         <a href="/register" class="link link-hover">Need an account? Register</a>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
+    <script>
+        // Attach event listener to the login button after the DOM is fully loaded
+        document.addEventListener("DOMContentLoaded", function() {
+            const loginButton = document.getElementById("loginBtn");
+            loginButton.addEventListener("click", function(event) {
+                event.preventDefault(); // Prevent page refresh
+                login(); // Call the login function
+            });
+        });
+
+        // Login function to handle form submission
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/api/v1/auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                // Handle successful login
+                console.log("Login successful!");
+                alert("Login successful!");
+            } else {
+                // Handle login failure
+                console.error("Login failed.");
+                alert("Login failed.");
+            }
+        }
+    </script>
 </body>
 </html>

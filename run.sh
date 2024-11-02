@@ -1,0 +1,1 @@
+rm lets-go && go build && ./lets-go
