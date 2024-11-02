@@ -13,6 +13,12 @@ type LoginData struct {
 	Password string `json:"password"`
 }
 
+type RegisterData struct {
+	Name string `json:"name"`
+	Email string `json:"email"`
+	Password string `json:"password"`
+}
+
 type ResponseData struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
@@ -22,7 +28,8 @@ type ResponseData struct {
 func main() {
 	http.HandleFunc("/", IndexPage)
 	http.HandleFunc("/login", LoginPage)
-	http.Handle("/api/v1/auth", MethodMiddleware("POST", http.HandlerFunc(auth)))
+	http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(login)))
+	// http.Handle("/api/v1/auth/register", MethodMiddleware("POST", http.HandlerFunc(register)))
 	fmt.Println("Server is running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -38,7 +45,7 @@ func MethodMiddleware(method string, next http.Handler) http.Handler {
 	})
 }
 
-func auth(w http.ResponseWriter, r *http.Request) {
+func login(w http.ResponseWriter, r *http.Request) {
 	var loginData LoginData
 
 	defer r.Body.Close()
