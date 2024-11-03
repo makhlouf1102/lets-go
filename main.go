@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"lets-go/database"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -26,6 +27,12 @@ type ResponseData struct {
 }
 
 func main() {
+	db, err := database.ConnectToDB("./database/database.db")
+	if err != nil {
+		log.Fatalf("Failed to connect to the database: %v", err)
+	}
+	defer db.Close()
+	
 	http.HandleFunc("/", IndexPage)
 	http.HandleFunc("/login", LoginPage)
 	http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(login)))
