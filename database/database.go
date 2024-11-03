@@ -1,23 +1,27 @@
+// database/connection.go
 package database
 
-import(
-	"database/sql"
-	"log"
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
+import (
+    "database/sql"
+    "log"
+
+    _ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
-func ConnectToDB(dbPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+var DB *sql.DB
 
-	if err != nil {
-		return nil, err
-	}
-	
-	if err := db.Ping(); err != nil {
-		db.Close()
-		return nil, err
-	}
+func InitializeDB(dataSourceName string) error {
+    var err error
+    DB, err = sql.Open("sqlite3", dataSourceName)
+    if err != nil {
+        return err
+    }
 
-	log.Println("Successfully connected to the database!")
-    return db, nil
+    // Test the connection
+    if err := DB.Ping(); err != nil {
+        return err
+    }
+
+    log.Println("Database connection successfully established")
+    return nil
 }

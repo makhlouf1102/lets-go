@@ -15,8 +15,8 @@ type LoginData struct {
 }
 
 type RegisterData struct {
-	Name string `json:"name"`
-	Email string `json:"email"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -27,12 +27,11 @@ type ResponseData struct {
 }
 
 func main() {
-	db, err := database.ConnectToDB("./database/database.db")
-	if err != nil {
-		log.Fatalf("Failed to connect to the database: %v", err)
+	if err := database.InitializeDB("./database/database.db"); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
-	
+	defer database.DB.Close()
+
 	http.HandleFunc("/", IndexPage)
 	http.HandleFunc("/login", LoginPage)
 	http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(login)))
