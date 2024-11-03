@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"lets-go/database"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -14,8 +15,8 @@ type LoginData struct {
 }
 
 type RegisterData struct {
-	Name string `json:"name"`
-	Email string `json:"email"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -26,6 +27,11 @@ type ResponseData struct {
 }
 
 func main() {
+	if err := database.InitializeDB("./database/database.db"); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.DB.Close()
+
 	http.HandleFunc("/", IndexPage)
 	http.HandleFunc("/login", LoginPage)
 	http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(login)))
