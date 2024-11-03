@@ -14,6 +14,8 @@ type User struct {
 }
 
 func (u *User) Create() error {
+	// return an error if the user exists
+	
 	query := `INSERT INTO user (username, email, password) VALUES (?, ?, ?)`
 	result, err := database.DB.Exec(query, u.Username, u.Email, u.Password)
 	if err != nil {

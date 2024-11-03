@@ -27,7 +27,7 @@ type ResponseData struct {
 }
 
 func main() {
-	if err := database.InitializeDB("./database/database.db"); err != nil {
+	if err := database.InitializeDB("./database/database.db", database.DB); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer database.DB.Close()
