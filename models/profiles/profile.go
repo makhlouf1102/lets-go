@@ -18,7 +18,27 @@ type Profile struct {
 }
 
 func (p *Profile) Create() error {
-	query := `INSERT INTO profile (user_id, first_name, last_name, date_of_birth, bio) VALUES (?, ?, ?, ?, ?)`
+	// First verify that the user exists
+	var exists bool
+	err := database.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM user WHERE user_id = ?)", p.UserID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return errors.New("cannot create profile: user does not exist")
+	}
+
+	// Check if profile already exists for this user
+	err = database.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM profile WHERE user_id = ?)", p.UserID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return errors.New("profile already exists for this user")
+	}
+
+	query := `INSERT INTO profile (user_id, first_name, last_name, date_of_birth, bio) 
+              VALUES (?, ?, ?, ?, ?)`
 	result, err := database.DB.Exec(query, p.UserID, p.FirstName, p.LastName, p.BirthDate, p.Biography)
 	if err != nil {
 		return err
@@ -59,4 +79,10 @@ func (p *Profile) Update() (*Profile, error) {
 		return nil, err
 	}
 	return p, nil
+}
+
+// Add this new function to help with test cleanup
+func DeleteAll() error {
+	_, err := database.DB.Exec("DELETE FROM profile")
+	return err
 }

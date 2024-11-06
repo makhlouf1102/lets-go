@@ -7,7 +7,7 @@ CREATE TABLE user (
 
 CREATE TABLE profile (
     profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
+    user_id INTEGER UNIQUE NOT NULL,
     first_name TEXT,
     last_name TEXT,
     date_of_birth DATE,
