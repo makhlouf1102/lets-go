@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"lets-go/database"
+	"strings"
 )
 
 type User struct {
@@ -14,6 +15,22 @@ type User struct {
 }
 
 func (u *User) Create() error {
+	// Validation
+	if u.Username == "" {
+		return errors.New("username cannot be empty")
+	}
+	if u.Email == "" {
+		return errors.New("email cannot be empty")
+	}
+	if u.Password == "" {
+		return errors.New("password cannot be empty")
+	}
+	
+	// Simple email format validation
+	if !strings.Contains(u.Email, "@") {
+		return errors.New("invalid email format")
+	}
+	
 	query := `INSERT INTO user (username, email, password) VALUES (?, ?, ?)`
 	result, err := database.DB.Exec(query, u.Username, u.Email, u.Password)
 	if err != nil {

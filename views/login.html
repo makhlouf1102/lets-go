@@ -1,84 +1,66 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - CodeEdit</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <div class="hero min-h-screen bg-base-200">
-        <div class="hero-content flex-col lg:flex-row-reverse">
-            <div class="text-center lg:text-left lg:ml-8">
-                <h1 class="text-5xl font-bold">Login</h1>
-                <p class="py-6">Start coding right away in your browser. Access all your projects and settings.</p>
-                <div class="bg-base-300 p-4 rounded-lg">
-                    <p class="font-semibold mb-2">Demo Account:</p>
-                    <div class="flex flex-col gap-2">
-                        <div class="flex items-center gap-2">
-                            <span>Email: test@test.com</span>
-                            <button class="btn btn-xs btn-ghost tooltip" 
-                                    data-tip="Copy"
-                                    onclick="navigator.clipboard.writeText('test@test.com')">
-                                <!-- Copy icon SVG -->
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-3.375c0-.621.504-1.125 1.125-1.125h3.375c.621 0 1.125.504 1.125 1.125v3.375c0 .621-.504 1.125-1.125 1.125Z" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span>Password: test</span>
-                            <button class="btn btn-xs btn-ghost tooltip" 
-                                    data-tip="Copy"
-                                    onclick="navigator.clipboard.writeText('test')">
-                                <!-- Copy icon SVG -->
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-3.375c0-.621.504-1.125 1.125-1.125h3.375c.621 0 1.125.504 1.125 1.125v3.375c0 .621-.504 1.125-1.125 1.125Z" />
-                                </svg>
-                            </button>
-                        </div>
+    <div>
+        <div>
+            <h1>Login</h1>
+            <p>Start coding right away in your browser. Access all your projects and settings.</p>
+            <div>
+                <p>Demo Account:</p>
+                <div>
+                    <div>
+                        <span>Email: test@test.com</span>
+                        <button onclick="navigator.clipboard.writeText('test@test.com')">Copy</button>
                     </div>
-                </div>
-            </div>
-            <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-                <div class="card-body">
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Email</span>
-                        </label>
-                        <input type="email" id="email" placeholder="email" class="input input-bordered" required />
-                    </div>
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Password</span>
-                        </label>
-                        <input type="password" id="password" placeholder="password" class="input input-bordered" required />
-                        <label class="label">
-                            <a href="#" class="label-text-alt link link-hover">Forgot password?</a>
-                        </label>
-                    </div>
-                    <div class="form-control mt-6">
-                        <button class="btn btn-primary" id="loginBtn">Login</button>
-                    </div>
-                    <div class="text-center mt-2">
-                        <a href="/register" class="link link-hover">Need an account? Register</a>
+                    <div>
+                        <span>Password: test</span>
+                        <button onclick="navigator.clipboard.writeText('test')">Copy</button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div>
+            <div>
+                <div>
+                    <label>
+                        <span>Email</span>
+                    </label>
+                    <input value="test@test.com" type="email" id="email" placeholder="email" required />
+                </div>
+                <div>
+                    <label>
+                        <span>Password</span>
+                    </label>
+                    <input value="test" type="password" id="password" placeholder="password" required />
+                    <label>
+                        <a href="#">Forgot password?</a>
+                    </label>
+                </div>
+                <div>
+                    <button id="loginBtn">Login</button>
+                </div>
+                <div>
+                    <a href="/register">Need an account? Register</a>
+                </div>
+            </div>
+        </div>
     </div>
+
     <script>
-        // Attach event listener to the login button after the DOM is fully loaded
         document.addEventListener("DOMContentLoaded", function() {
             const loginButton = document.getElementById("loginBtn");
             loginButton.addEventListener("click", function(event) {
-                event.preventDefault(); // Prevent page refresh
-                login(); // Call the login function
+                event.preventDefault();
+                login();
             });
         });
 
-        // Login function to handle form submission
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -92,11 +74,9 @@
             });
 
             if (response.ok) {
-                // Handle successful login
                 console.log("Login successful!");
                 alert("Login successful!");
             } else {
-                // Handle login failure
                 console.error("Login failed.");
                 alert("Login failed.");
             }
