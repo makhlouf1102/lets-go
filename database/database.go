@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 
@@ -43,8 +42,6 @@ func SetUpDBForTests(buildScriptPath string, dataScriptPath string) {
 	if err != nil {
 		log.Fatalf("Failed to read database setup script: %v", err)
 	}
-
-	fmt.Println(string(build_script))
 
 	if _, err = db.Exec(string(build_script)); err != nil {
 		log.Fatalf("Failed to execute database setup build script: %v", err)
