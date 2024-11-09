@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"lets-go/database"
+	"lets-go/views"
 	"log"
 	"net/http"
-	"path/filepath"
 )
 
 type LoginData struct {
@@ -32,8 +32,9 @@ func main() {
 	}
 	defer database.DB.Close()
 
-	http.HandleFunc("/", IndexPage)
-	http.HandleFunc("/login", LoginPage)
+	http.HandleFunc("/", views.IndexPage)
+	http.HandleFunc("/login", views.LoginPage)
+	http.HandleFunc("/register", views.RegisterPage)
 	http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(login)))
 	// http.Handle("/api/v1/auth/register", MethodMiddleware("POST", http.HandlerFunc(register)))
 	fmt.Println("Server is running on http://localhost:8080")
@@ -79,16 +80,4 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
-}
-
-func IndexPage(w http.ResponseWriter, r *http.Request) {
-	RenderStaticPage(w, r, "index.html")
-}
-
-func LoginPage(w http.ResponseWriter, r *http.Request) {
-	RenderStaticPage(w, r, "login.html")
-}
-
-func RenderStaticPage(w http.ResponseWriter, r *http.Request, filename string) {
-	http.ServeFile(w, r, filepath.Join("views", filename))
 }
