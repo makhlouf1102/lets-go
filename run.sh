@@ -12,8 +12,8 @@ fi
 
 # Build the application
 echo "Building application..."
-go build -o "$BINARY_NAME" || exit 1
+go build -o ./build/"$BINARY_NAME" || exit 1
 
 # Run the application
 echo "Starting application..."
-./"$BINARY_NAME"
+./build/"$BINARY_NAME"
