@@ -21,147 +21,117 @@ func TestMain(m *testing.M) {
 }
 
 func TestUserCreate(t *testing.T) {
-	// Test successful creation
-	u := &User{Username: "testuser", Email: "test@example.com", Password: "password123"}
-	err := u.Create()
-	if err != nil {
-		t.Fatalf("Failed to create user: %v", err)
+	// Define a user for testing
+	user := &User{
+		ID:        "testuser4",
+		Username:  "testuser4",
+		Email:     "test4@example.com",
+		Password:  "password4",
+		FirstName: "Jack",
+		LastName:  "Daniels",
 	}
 
-	// Verify user was created
-	var count int
-	err = database.DB.QueryRow("SELECT COUNT(*) FROM user WHERE username = ?", u.Username).Scan(&count)
-	if err != nil {
-		t.Fatalf("Failed to check if user was created: %v", err)
-	}
-	if count != 1 {
-		t.Errorf("Expected user count to be 1, got %d", count)
-	}
-
-	// Test duplicate username
-	duplicateUser := &User{Username: "testuser", Email: "different@example.com", Password: "password123"}
-	err = duplicateUser.Create()
-	if err == nil {
-		t.Error("Expected error when creating user with duplicate username, got nil")
-	}
-}
-
-func TestUserGet(t *testing.T) {
-	// Create a test user first
-	u := &User{Username: "gettest", Email: "get@example.com", Password: "password123"}
-	err := u.Create()
+	// Call the Create method
+	err := user.Create()
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
 	}
 
-	// Test successful get
-	retrieved, err := Get(u.ID)
+	// Verify the user was inserted
+	var retrievedUser User
+	query := `SELECT user_id, username, email, password, first_name, last_name FROM user WHERE user_id = ?`
+	row := database.DB.QueryRow(query, user.ID)
+	err = row.Scan(&retrievedUser.ID, &retrievedUser.Username, &retrievedUser.Email, &retrievedUser.Password, &retrievedUser.FirstName, &retrievedUser.LastName)
 	if err != nil {
-		t.Fatalf("Failed to get user: %v", err)
-	}
-	if retrieved.Username != u.Username {
-		t.Errorf("Expected username %s, got %s", u.Username, retrieved.Username)
+		t.Fatalf("Failed to retrieve created user: %v", err)
 	}
 
-	// Test non-existent user
-	_, err = Get(99999)
+	// Verify the fields
+	if user.ID != retrievedUser.ID {
+		t.Errorf("Expected ID '%s', got '%s'", user.ID, retrievedUser.ID)
+	}
+	if user.Username != retrievedUser.Username {
+		t.Errorf("Expected Username '%s', got '%s'", user.Username, retrievedUser.Username)
+	}
+	if user.Email != retrievedUser.Email {
+		t.Errorf("Expected Email '%s', got '%s'", user.Email, retrievedUser.Email)
+	}
+	if user.Password != retrievedUser.Password {
+		t.Errorf("Expected Password '%s', got '%s'", user.Password, retrievedUser.Password)
+	}
+	if user.FirstName != retrievedUser.FirstName {
+		t.Errorf("Expected FirstName '%s', got '%s'", user.FirstName, retrievedUser.FirstName)
+	}
+	if user.LastName != retrievedUser.LastName {
+		t.Errorf("Expected LastName '%s', got '%s'", user.LastName, retrievedUser.LastName)
+	}
+}
+
+func TestUserGet(t *testing.T) {
+	// Test getting an existing user
+	user, err := Get("testuser1")
+	if err != nil {
+		t.Fatalf("Failed to get existing user: %v", err)
+	}
+
+	// Verify the retrieved data
+	if user.Username != "testuser1" ||
+		user.Email != "test1@example.com" ||
+		user.FirstName != "Test1" ||
+		user.LastName != "User1" {
+		t.Errorf("Retrieved user data doesn't match expected values")
+	}
+
+	// Test getting non-existent user
+	_, err = Get("doesnotexist")
 	if err == nil {
 		t.Error("Expected error when getting non-existent user, got nil")
 	}
 }
 
 func TestUserUpdate(t *testing.T) {
-	// Create a test user first
-	u := &User{Username: "updatetest", Email: "update@example.com", Password: "password123"}
-	err := u.Create()
-	if err != nil {
-		t.Fatalf("Failed to create test user: %v", err)
+	// Create a user to update
+	user := &User{
+		ID:        "testuser2",
+		Username:  "updateduser2",
+		Email:     "updated2@example.com",
+		FirstName: "UpdatedFirst",
+		LastName:  "UpdatedLast",
 	}
 
-	// Update user
-	u.Username = "updated_username"
-	u.Email = "updated@example.com"
-	updated, err := u.Update()
+	// Update the user
+	updatedUser, err := user.Update()
 	if err != nil {
 		t.Fatalf("Failed to update user: %v", err)
 	}
 
-	// Verify update
-	retrieved, err := Get(updated.ID)
+	// Verify the update
+	_, err = Get(user.ID)
 	if err != nil {
 		t.Fatalf("Failed to get updated user: %v", err)
 	}
-	if retrieved.Username != "updated_username" {
-		t.Errorf("Expected username 'updated_username', got '%s'", retrieved.Username)
-	}
-	if retrieved.Email != "updated@example.com" {
-		t.Errorf("Expected email 'updated@example.com', got '%s'", retrieved.Email)
+
+	if updatedUser.Username != user.Username ||
+		updatedUser.Email != user.Email ||
+		updatedUser.FirstName != user.FirstName ||
+		updatedUser.LastName != user.LastName {
+		t.Error("Updated user data doesn't match expected values")
 	}
 }
 
 func TestUserDelete(t *testing.T) {
-	// Create a test user first
-	u := &User{Username: "deletetest", Email: "delete@example.com", Password: "password123"}
-	err := u.Create()
-	if err != nil {
-		t.Fatalf("Failed to create test user: %v", err)
-	}
+	// Create a user to delete
+	user := &User{ID: "testuser3"}
 
-	// Delete user
-	err = u.Delete()
+	// Delete the user
+	err := user.Delete()
 	if err != nil {
 		t.Fatalf("Failed to delete user: %v", err)
 	}
 
-	// Verify deletion
-	_, err = Get(u.ID)
+	// Verify the deletion
+	_, err = Get(user.ID)
 	if err == nil {
 		t.Error("Expected error when getting deleted user, got nil")
-	}
-}
-
-func TestUserCreateValidation(t *testing.T) {
-	testCases := []struct {
-		name    string
-		user    User
-		wantErr bool
-		errMsg  string
-	}{
-		{
-			name:    "Empty Username",
-			user:    User{Username: "", Email: "test@example.com", Password: "password123"},
-			wantErr: true,
-			errMsg:  "username cannot be empty",
-		},
-		{
-			name:    "Empty Email",
-			user:    User{Username: "testuser", Email: "", Password: "password123"},
-			wantErr: true,
-			errMsg:  "email cannot be empty",
-		},
-		{
-			name:    "Empty Password",
-			user:    User{Username: "testuser", Email: "test@example.com", Password: ""},
-			wantErr: true,
-			errMsg:  "password cannot be empty",
-		},
-		{
-			name:    "Invalid Email Format",
-			user:    User{Username: "testuser", Email: "invalid-email", Password: "password123"},
-			wantErr: true,
-			errMsg:  "invalid email format",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.user.Create()
-			if tc.wantErr && err == nil {
-				t.Errorf("%s: expected error but got none", tc.name)
-			}
-			if !tc.wantErr && err != nil {
-				t.Errorf("%s: unexpected error: %v", tc.name, err)
-			}
-		})
 	}
 }

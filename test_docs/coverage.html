@@ -55,13 +55,13 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">lets-go/database/database.go (43.5%)</option>
+				<option value="file0">lets-go/database/database.go (40.9%)</option>
 				
-				<option value="file1">lets-go/main.go (0.0%)</option>
+				<option value="file1">lets-go/handlers/auth.go (0.0%)</option>
 				
-				<option value="file2">lets-go/models/profiles/profile.go (81.6%)</option>
+				<option value="file2">lets-go/main.go (0.0%)</option>
 				
-				<option value="file3">lets-go/models/users/user.go (90.9%)</option>
+				<option value="file3">lets-go/models/users/user.go (85.7%)</option>
 				
 				</select>
 			</div>
@@ -79,7 +79,6 @@
 
 import (
         "database/sql"
-        "fmt"
         "log"
         "os"
 
@@ -121,9 +120,7 @@ func SetUpDBForTests(buildScriptPath string, dataScriptPath string) <span class=
                 log.Fatalf("Failed to read database setup script: %v", err)
         }</span>
 
-        <span class="cov8" title="1">fmt.Println(string(build_script))
-
-        if _, err = db.Exec(string(build_script)); err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if _, err = db.Exec(string(build_script)); err != nil </span><span class="cov0" title="0">{
                 log.Fatalf("Failed to execute database setup build script: %v", err)
         }</span>
 
@@ -133,7 +130,21 @@ func SetUpDBForTests(buildScriptPath string, dataScriptPath string) <span class=
 }
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package main
+		<pre class="file" id="file1" style="display: none">package auth
+
+import (
+        "net/http"
+)
+
+type RegisterRequest struct {
+}
+
+func Register(w http.ResponseWriter, r *http.Request) {<span class="cov0" title="0">}</span>
+
+func Login(w http.ResponseWriter, r *http.Request) {<span class="cov0" title="0">}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package main
 
 import (
         "encoding/json"
@@ -229,154 +240,44 @@ func RenderStaticPage(w http.ResponseWriter, r *http.Request, filename string) <
 }</span>
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package profile
-
-import (
-        "database/sql"
-        "errors"
-        "lets-go/database"
-        "time"
-)
-
-// Profile represents a user profile in the system
-type Profile struct {
-        ID        int       `json:"id"`
-        UserID    int       `json:"user_id"`
-        FirstName string    `json:"first_name"`
-        LastName  string    `json:"last_name"`
-        BirthDate time.Time `json:"birth_date"`
-        Biography string    `json:"biography"`
-}
-
-func (p *Profile) Create() error <span class="cov8" title="1">{
-        // First verify that the user exists
-        var exists bool
-        err := database.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM user WHERE user_id = ?)", p.UserID).Scan(&amp;exists)
-        if err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov8" title="1">if !exists </span><span class="cov0" title="0">{
-                return errors.New("cannot create profile: user does not exist")
-        }</span>
-
-        // Check if profile already exists for this user
-        <span class="cov8" title="1">err = database.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM profile WHERE user_id = ?)", p.UserID).Scan(&amp;exists)
-        if err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov8" title="1">if exists </span><span class="cov8" title="1">{
-                return errors.New("profile already exists for this user")
-        }</span>
-
-        <span class="cov8" title="1">query := `INSERT INTO profile (user_id, first_name, last_name, date_of_birth, bio) 
-              VALUES (?, ?, ?, ?, ?)`
-        result, err := database.DB.Exec(query, p.UserID, p.FirstName, p.LastName, p.BirthDate, p.Biography)
-        if err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-
-        <span class="cov8" title="1">id, err := result.LastInsertId()
-        if err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov8" title="1">p.ID = int(id)
-        return nil</span>
-}
-
-func Get(id int) (*Profile, error) <span class="cov8" title="1">{
-        query := `SELECT profile_id, user_id, first_name, last_name, date_of_birth, bio FROM profile WHERE profile_id = ?`
-        row := database.DB.QueryRow(query, id)
-
-        var profile Profile
-        if err := row.Scan(&amp;profile.ID, &amp;profile.UserID, &amp;profile.FirstName, &amp;profile.LastName, &amp;profile.BirthDate, &amp;profile.Biography); err != nil </span><span class="cov8" title="1">{
-                if errors.Is(err, sql.ErrNoRows) </span><span class="cov8" title="1">{
-                        return nil, errors.New("profile not found")
-                }</span>
-                <span class="cov0" title="0">return nil, err</span>
-        }
-        <span class="cov8" title="1">return &amp;profile, nil</span>
-}
-
-func (p *Profile) Delete() error <span class="cov8" title="1">{
-        query := `DELETE FROM profile WHERE profile_id = ?`
-        _, err := database.DB.Exec(query, p.ID)
-        return err
-}</span>
-
-func (p *Profile) Update() (*Profile, error) <span class="cov8" title="1">{
-        query := `UPDATE profile SET first_name = ?, last_name = ?, date_of_birth = ?, bio = ? WHERE profile_id = ?`
-        _, err := database.DB.Exec(query, p.FirstName, p.LastName, p.BirthDate, p.Biography, p.ID)
-        if err != nil </span><span class="cov0" title="0">{
-                return nil, err
-        }</span>
-        <span class="cov8" title="1">return p, nil</span>
-}
-
-// Add this new function to help with test cleanup
-func DeleteAll() error <span class="cov8" title="1">{
-        _, err := database.DB.Exec("DELETE FROM profile")
-        return err
-}</span>
-</pre>
-		
 		<pre class="file" id="file3" style="display: none">package user
 
 import (
-        "database/sql"
-        "errors"
         "lets-go/database"
-        "strings"
 )
 
 type User struct {
-        ID       int    `json:"id"`
-        Username string `json:"username"`
-        Email    string `json:"email"`
-        Password string `json:"-"` // Hide from JSON output
+        ID        string `json:"id"`
+        Username  string `json:"username"`
+        Email     string `json:"email"`
+        Password  string `json:"-"` // Hide from JSON output
+        FirstName string `json:"first_name"`
+        LastName  string `json:"last_name"`
 }
 
 func (u *User) Create() error <span class="cov8" title="1">{
-        // Validation
-        if u.Username == "" </span><span class="cov8" title="1">{
-                return errors.New("username cannot be empty")
-        }</span>
-        <span class="cov8" title="1">if u.Email == "" </span><span class="cov8" title="1">{
-                return errors.New("email cannot be empty")
-        }</span>
-        <span class="cov8" title="1">if u.Password == "" </span><span class="cov8" title="1">{
-                return errors.New("password cannot be empty")
-        }</span>
-        
-        // Simple email format validation
-        <span class="cov8" title="1">if !strings.Contains(u.Email, "@") </span><span class="cov8" title="1">{
-                return errors.New("invalid email format")
-        }</span>
-        
-        <span class="cov8" title="1">query := `INSERT INTO user (username, email, password) VALUES (?, ?, ?)`
-        result, err := database.DB.Exec(query, u.Username, u.Email, u.Password)
-        if err != nil </span><span class="cov8" title="1">{
-                return err
-        }</span>
+        query := `INSERT INTO user (user_id, username, email, password, first_name, last_name) VALUES (?, ?, ?, ?, ?, ?)`
+        _, err := database.DB.Exec(query, u.ID, u.Username, u.Email, u.Password, u.FirstName, u.LastName)
 
-        <span class="cov8" title="1">id, err := result.LastInsertId()
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
-        <span class="cov8" title="1">u.ID = int(id)
-        return nil</span>
+
+        <span class="cov8" title="1">return nil</span>
 }
 
-func Get(id int) (*User, error) <span class="cov8" title="1">{
-        query := `SELECT user_id, username, email, password FROM user WHERE user_id = ?`
+func Get(id string) (*User, error) <span class="cov8" title="1">{
+        query := `SELECT user_id, username, email, password, first_name, last_name FROM user WHERE user_id = ?`
         row := database.DB.QueryRow(query, id)
 
-        var user User
-        if err := row.Scan(&amp;user.ID, &amp;user.Username, &amp;user.Email, &amp;user.Password); err != nil </span><span class="cov8" title="1">{
-                if errors.Is(err, sql.ErrNoRows) </span><span class="cov8" title="1">{
-                        return nil, errors.New("user not found")
-                }</span>
-                <span class="cov0" title="0">return nil, err</span>
-        }
+        if err := row.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">var user User
+        if err := row.Scan(&amp;user.ID, &amp;user.Username, &amp;user.Email, &amp;user.Password, &amp;user.FirstName, &amp;user.LastName); err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
         <span class="cov8" title="1">return &amp;user, nil</span>
 }
 
@@ -387,8 +288,8 @@ func (u *User) Delete() error <span class="cov8" title="1">{
 }</span>
 
 func (u *User) Update() (*User, error) <span class="cov8" title="1">{
-        query := `UPDATE user SET username = ?, email = ?, password = ? WHERE user_id = ?`
-        _, err := database.DB.Exec(query, u.Username, u.Email, u.Password, u.ID)
+        query := `UPDATE user SET username = ?, email = ?, password = ?, first_name = ?, last_name = ? WHERE user_id = ?`
+        _, err := database.DB.Exec(query, u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.ID)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
