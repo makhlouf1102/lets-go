@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"lets-go/database"
 )
 
@@ -18,6 +19,7 @@ func (u *User) Create() error {
 	_, err := database.DB.Exec(query, u.ID, u.Username, u.Email, u.Password, u.FirstName, u.LastName)
 
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -52,4 +54,13 @@ func (u *User) Update() (*User, error) {
 		return nil, err
 	}
 	return u, nil
+}
+
+func (u *User) CheckDuplicate() (bool, error) {
+	query := `SELECT COUNT(*) FROM user WHERE username = ? OR email = ?`
+	var count int
+	if err := database.DB.QueryRow(query, u.Username, u.Email).Scan(&count); err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

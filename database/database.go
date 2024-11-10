@@ -10,15 +10,34 @@ import (
 
 var DB *sql.DB
 
-func InitializeDB(dataSourceName string, dbRef *sql.DB) error {
-	var err error
-	dbRef, err = sql.Open("sqlite3", dataSourceName)
-	if err != nil {
-		return err
+func InitializeDB(dataSourceName string) error {
+	// Check if the database file exists
+	if _, err := os.Stat(dataSourceName); os.IsNotExist(err) {
+		log.Println("Database does not exist, initializing...")
+
+		DB, err = sql.Open("sqlite3", dataSourceName)
+		if err != nil {
+			return err
+		}
+
+		buildScript, err := os.ReadFile("./database/scripts/db_build.sql")
+		if err != nil {
+			return err
+		}
+
+		if _, err = DB.Exec(string(buildScript)); err != nil {
+			return err
+		}
+	} else {
+		// Open the existing database
+		DB, err = sql.Open("sqlite3", dataSourceName)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Test the connection
-	if err := dbRef.Ping(); err != nil {
+	if err := DB.Ping(); err != nil {
 		return err
 	}
 
