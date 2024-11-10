@@ -3,8 +3,10 @@ package auth
 import (
 	"encoding/json"
 	"lets-go/libs/bcrypt"
-	"lets-go/models/user"
+	"lets-go/libs/token"
+	user_model "lets-go/models/user"
 	"net/http"
+
 	"github.com/google/uuid"
 )
 
@@ -17,8 +19,8 @@ type RegisterRequestData struct {
 }
 
 type RegisterResponseData struct {
-	Status  string     `json:"status"`
-	Message string     `json:"message"`
+	Status  string           `json:"status"`
+	Message string           `json:"message"`
 	Data    *user_model.User `json:"data"`
 }
 
@@ -28,8 +30,9 @@ type LoginRequestData struct {
 }
 
 type LoginResponseData struct {
-	Status  string     `json:"status"`
-	Message string     `json:"message"`
+	Status  string           `json:"status"`
+	Message string           `json:"message"`
+	Token   string           `json:"token"`
 	Data    *user_model.User `json:"data"`
 }
 
@@ -105,9 +108,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := token.CreateToken(user.ID)
+	if err != nil {
+		http.Error(w, "server error creating token", http.StatusInternalServerError)
+		return
+	}
+
 	response := LoginResponseData{
 		Status:  "success",
 		Message: "User successfully logged in",
+		Token:   token,
 		Data:    user,
 	}
 
@@ -120,4 +130,3 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
