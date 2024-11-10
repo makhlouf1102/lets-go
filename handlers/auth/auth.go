@@ -19,7 +19,18 @@ type RegisterRequestData struct {
 type RegisterResponseData struct {
 	Status  string     `json:"status"`
 	Message string     `json:"message"`
-	Data    *user.User `json:"data"`
+	Data    *user_model.User `json:"data"`
+}
+
+type LoginRequestData struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponseData struct {
+	Status  string     `json:"status"`
+	Message string     `json:"message"`
+	Data    *user_model.User `json:"data"`
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +49,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &user.User{
+	user := &user_model.User{
 		ID:        uuid.New().String(),
 		Username:  dataObj.Username,
 		Email:     dataObj.Email,
@@ -73,4 +84,40 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {}
+func Login(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	var dataObj LoginRequestData
+
+	if err := json.NewDecoder(r.Body).Decode(&dataObj); err != nil {
+		http.Error(w, "invalid Json format", http.StatusBadRequest)
+		return
+	}
+
+	user, err := user_model.GetByEmail(dataObj.Email)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+
+	if !bcrypt.CheckPasswordHash(dataObj.Password, user.Password) {
+		http.Error(w, "invalid password", http.StatusUnauthorized)
+		return
+	}
+
+	response := LoginResponseData{
+		Status:  "success",
+		Message: "User successfully logged in",
+		Data:    user,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "server error encoding response", http.StatusInternalServerError)
+		return
+	}
+
+}
+

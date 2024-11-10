@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"lets-go/database"
 	"lets-go/handlers/auth"
+	"lets-go/libs/env"
 	"lets-go/views"
 	"log"
 	"net/http"
@@ -28,6 +29,8 @@ type ResponseData struct {
 }
 
 func main() {
+	env.Load()
+
 	if err := database.InitializeDB("./database/database.db"); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -37,6 +40,7 @@ func main() {
 	http.HandleFunc("/login", views.LoginPage)
 	http.HandleFunc("/register", views.RegisterPage)
 	http.Handle("/api/v1/auth/register", MethodMiddleware("POST", http.HandlerFunc(auth.Register)))
+	http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(auth.Login)))
 	fmt.Println("Server is running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

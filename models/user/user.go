@@ -1,4 +1,4 @@
-package user
+package user_model
 
 import (
 	"fmt"
@@ -29,6 +29,21 @@ func (u *User) Create() error {
 func Get(id string) (*User, error) {
 	query := `SELECT user_id, username, email, password, first_name, last_name FROM user WHERE user_id = ?`
 	row := database.DB.QueryRow(query, id)
+
+	if err := row.Err(); err != nil {
+		return nil, err
+	}
+
+	var user User
+	if err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func GetByEmail(email string) (*User, error) {
+	query := `SELECT user_id, username, email, password, first_name, last_name FROM user WHERE email = ?`
+	row := database.DB.QueryRow(query, email)
 
 	if err := row.Err(); err != nil {
 		return nil, err
