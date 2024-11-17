@@ -68,8 +68,9 @@
         });
 
         if (response.ok) {
-          alert('Login successful');
-          window.location.href = '/'; // Redirect to home page on success
+          const data = await response.json();
+          window.sessionStorage.setItem('token', data.token);
+          window.location.href = '/';
         } else {
           alert('Login failed. Please try again.');
         }

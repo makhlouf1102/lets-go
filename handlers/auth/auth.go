@@ -128,5 +128,4 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error encoding response", http.StatusInternalServerError)
 		return
 	}
-
 }
