@@ -55,13 +55,23 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">lets-go/database/database.go (40.9%)</option>
+				<option value="file0">lets-go/database/database.go (29.0%)</option>
 				
-				<option value="file1">lets-go/handlers/auth.go (0.0%)</option>
+				<option value="file1">lets-go/handlers/auth/auth.go (0.0%)</option>
 				
-				<option value="file2">lets-go/main.go (0.0%)</option>
+				<option value="file2">lets-go/libs/bcrypt/bcrypt.go (0.0%)</option>
 				
-				<option value="file3">lets-go/models/users/user.go (85.7%)</option>
+				<option value="file3">lets-go/libs/env/env.go (0.0%)</option>
+				
+				<option value="file4">lets-go/libs/token/token.go (0.0%)</option>
+				
+				<option value="file5">lets-go/main.go (0.0%)</option>
+				
+				<option value="file6">lets-go/models/problem/problem.go (86.2%)</option>
+				
+				<option value="file7">lets-go/models/user/user.go (51.4%)</option>
+				
+				<option value="file8">lets-go/views/views.go (0.0%)</option>
 				
 				</select>
 			</div>
@@ -87,15 +97,34 @@ import (
 
 var DB *sql.DB
 
-func InitializeDB(dataSourceName string, dbRef *sql.DB) error <span class="cov0" title="0">{
-        var err error
-        dbRef, err = sql.Open("sqlite3", dataSourceName)
-        if err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
+func InitializeDB(dataSourceName string) error <span class="cov0" title="0">{
+        // Check if the database file exists
+        if _, err := os.Stat(dataSourceName); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                log.Println("Database does not exist, initializing...")
+
+                DB, err = sql.Open("sqlite3", dataSourceName)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov0" title="0">buildScript, err := os.ReadFile("./database/scripts/db_build.sql")
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov0" title="0">if _, err = DB.Exec(string(buildScript)); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        } else<span class="cov0" title="0"> {
+                // Open the existing database
+                DB, err = sql.Open("sqlite3", dataSourceName)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
 
         // Test the connection
-        <span class="cov0" title="0">if err := dbRef.Ping(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov0" title="0">if err := DB.Ping(); err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
@@ -133,26 +162,208 @@ func SetUpDBForTests(buildScriptPath string, dataScriptPath string) <span class=
 		<pre class="file" id="file1" style="display: none">package auth
 
 import (
+        "encoding/json"
+        "lets-go/libs/bcrypt"
+        "lets-go/libs/token"
+        user_model "lets-go/models/user"
         "net/http"
+
+        "github.com/google/uuid"
 )
 
-type RegisterRequest struct {
+type RegisterRequestData struct {
+        Username  string `json:"username"`
+        Email     string `json:"email"`
+        Password  string `json:"password"`
+        FirstName string `json:"firstname"`
+        LastName  string `json:"lastname"`
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {<span class="cov0" title="0">}</span>
+type RegisterResponseData struct {
+        Status  string           `json:"status"`
+        Message string           `json:"message"`
+        Data    *user_model.User `json:"data"`
+}
 
-func Login(w http.ResponseWriter, r *http.Request) {<span class="cov0" title="0">}</span>
+type LoginRequestData struct {
+        Email    string `json:"email"`
+        Password string `json:"password"`
+}
+
+type LoginResponseData struct {
+        Status  string           `json:"status"`
+        Message string           `json:"message"`
+        Token   string           `json:"token"`
+        Data    *user_model.User `json:"data"`
+}
+
+func Register(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        defer r.Body.Close()
+
+        var dataObj RegisterRequestData
+
+        if err := json.NewDecoder(r.Body).Decode(&amp;dataObj); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid Json format", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">hashedPassword, err := bcrypt.HashPassword(dataObj.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "server error hashing password", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">user := &amp;user_model.User{
+                ID:        uuid.New().String(),
+                Username:  dataObj.Username,
+                Email:     dataObj.Email,
+                Password:  hashedPassword,
+                FirstName: dataObj.FirstName,
+                LastName:  dataObj.LastName,
+        }
+
+        if duplicate, err := user.CheckDuplicate(); err != nil || duplicate </span><span class="cov0" title="0">{
+                http.Error(w, "username or email already exists", http.StatusConflict)
+                return
+        }</span>
+
+        <span class="cov0" title="0">if err := user.Create(); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "Server Error Creating User", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">response := RegisterResponseData{
+                Status:  "success",
+                Message: "User successfully registered",
+                Data:    user,
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+
+        if err := json.NewEncoder(w).Encode(response); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "server error encoding response", http.StatusInternalServerError)
+                return
+        }</span>
+
+}
+
+func Login(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        defer r.Body.Close()
+
+        var dataObj LoginRequestData
+
+        if err := json.NewDecoder(r.Body).Decode(&amp;dataObj); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid Json format", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">user, err := user_model.GetByEmail(dataObj.Email)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "user not found", http.StatusNotFound)
+                return
+        }</span>
+
+        <span class="cov0" title="0">if !bcrypt.CheckPasswordHash(dataObj.Password, user.Password) </span><span class="cov0" title="0">{
+                http.Error(w, "invalid password", http.StatusUnauthorized)
+                return
+        }</span>
+
+        <span class="cov0" title="0">token, err := token.CreateToken(user.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "server error creating token", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">response := LoginResponseData{
+                Status:  "success",
+                Message: "User successfully logged in",
+                Token:   token,
+                Data:    user,
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+
+        if err := json.NewEncoder(w).Encode(response); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "server error encoding response", http.StatusInternalServerError)
+                return
+        }</span>
+}
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package main
+		<pre class="file" id="file2" style="display: none">package bcrypt
+
+import "golang.org/x/crypto/bcrypt"
+
+func HashPassword(password string) (string, error) <span class="cov0" title="0">{
+    bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+    return string(bytes), err
+}</span>
+
+func CheckPasswordHash(password, hash string) bool <span class="cov0" title="0">{
+    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+    return err == nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package env
+
+import (
+        "log"
+        "os"
+
+        "github.com/joho/godotenv"
+)
+
+func Load() <span class="cov0" title="0">{
+        err := godotenv.Load()
+        
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal("Error loading .env file")
+        }</span>
+        <span class="cov0" title="0">log.Println("all env variables loaded")</span>
+}
+
+func Get(key string) string <span class="cov0" title="0">{
+        return os.Getenv(key)
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package token
+
+import (
+        "time"
+        "github.com/golang-jwt/jwt/v5"
+        "lets-go/libs/env"
+)
+
+func CreateToken(userID string) (string, error) <span class="cov0" title="0">{
+    // Set token claims
+    claims := jwt.MapClaims{
+        "user_id": userID,
+        "exp":     time.Now().Add(time.Hour * 24).Unix(), // Set expiration to 24 hours
+    }
+
+    // Create the token using the claims and signing method
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+    // Sign and return the token as a string
+        return token.SignedString([]byte(env.Get("SECRET_KEY")))
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package main
 
 import (
         "encoding/json"
         "fmt"
         "lets-go/database"
+        "lets-go/handlers/auth"
+        "lets-go/libs/env"
+        "lets-go/views"
         "log"
         "net/http"
-        "path/filepath"
 )
 
 type LoginData struct {
@@ -173,15 +384,18 @@ type ResponseData struct {
 }
 
 func main() <span class="cov0" title="0">{
-        if err := database.InitializeDB("./database/database.db", database.DB); err != nil </span><span class="cov0" title="0">{
+        env.Load()
+
+        if err := database.InitializeDB("./database/database.db"); err != nil </span><span class="cov0" title="0">{
                 log.Fatalf("Failed to connect to database: %v", err)
         }</span>
         <span class="cov0" title="0">defer database.DB.Close()
 
-        http.HandleFunc("/", IndexPage)
-        http.HandleFunc("/login", LoginPage)
-        http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(login)))
-        // http.Handle("/api/v1/auth/register", MethodMiddleware("POST", http.HandlerFunc(register)))
+        http.HandleFunc("/", views.IndexPage)
+        http.HandleFunc("/login", views.LoginPage)
+        http.HandleFunc("/register", views.RegisterPage)
+        http.Handle("/api/v1/auth/register", MethodMiddleware("POST", http.HandlerFunc(auth.Register)))
+        http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(auth.Login)))
         fmt.Println("Server is running on http://localhost:8080")
         log.Fatal(http.ListenAndServe(":8080", nil))</span>
 }
@@ -226,23 +440,79 @@ func login(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">
                 http.Error(w, "Failed to encode response", http.StatusInternalServerError)
         }</span>
 }
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package problem_model
 
-func IndexPage(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
-        RenderStaticPage(w, r, "index.html")
+import (
+        "lets-go/database"
+)
+
+type Problem struct {
+        ID          string `json:"problem_id"`
+        Title       string `json:"title"`
+        Description string `json:"description"`
+        Difficulty  string `json:"difficulty"`
+}
+
+type ProblemList struct {
+        Problems []Problem `json:"problems"`
+}
+
+func GetAllProblems() ([]ProblemList, error) <span class="cov8" title="1">{
+        rows, err := database.DB.Query("SELECT * FROM problem")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        var problemLists []ProblemList
+        for rows.Next() </span><span class="cov8" title="1">{
+                var problem Problem
+                err := rows.Scan(&amp;problem.ID, &amp;problem.Title, &amp;problem.Description, &amp;problem.Difficulty)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">problemLists = append(problemLists, ProblemList{Problems: []Problem{problem}})</span>
+        }
+        <span class="cov8" title="1">return problemLists, nil</span>
+}
+
+func GetProblem(id string) (*Problem, error) <span class="cov8" title="1">{
+        row := database.DB.QueryRow("SELECT * FROM problem WHERE problem_id = ?", id)
+        var problem Problem
+        err := row.Scan(&amp;problem.ID, &amp;problem.Title, &amp;problem.Description, &amp;problem.Difficulty)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;problem, nil</span>
+}
+
+func (p *Problem) Create() error <span class="cov8" title="1">{
+        query := "INSERT INTO problem (problem_id, title, description, difficulty) VALUES (?, ?, ?, ?)"
+        _, err := database.DB.Exec(query, p.ID, p.Title, p.Description, p.Difficulty)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (p *Problem) Update() error <span class="cov8" title="1">{
+        query := "UPDATE problem SET title = ?, description = ?, difficulty = ? WHERE problem_id = ?"
+        _, err := database.DB.Exec(query, p.Title, p.Description, p.Difficulty, p.ID)
+        return err
 }</span>
 
-func LoginPage(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
-        RenderStaticPage(w, r, "login.html")
-}</span>
-
-func RenderStaticPage(w http.ResponseWriter, r *http.Request, filename string) <span class="cov0" title="0">{
-        http.ServeFile(w, r, filepath.Join("views", filename))
+func (p *Problem) Delete() error <span class="cov8" title="1">{
+        query := "DELETE FROM problem WHERE problem_id = ?"
+        _, err := database.DB.Exec(query, p.ID)
+        return err
 }</span>
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package user
+		<pre class="file" id="file7" style="display: none">package user_model
 
 import (
+        "fmt"
         "lets-go/database"
 )
 
@@ -260,6 +530,7 @@ func (u *User) Create() error <span class="cov8" title="1">{
         _, err := database.DB.Exec(query, u.ID, u.Username, u.Email, u.Password, u.FirstName, u.LastName)
 
         if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
                 return err
         }</span>
 
@@ -281,6 +552,21 @@ func Get(id string) (*User, error) <span class="cov8" title="1">{
         <span class="cov8" title="1">return &amp;user, nil</span>
 }
 
+func GetByEmail(email string) (*User, error) <span class="cov0" title="0">{
+        query := `SELECT user_id, username, email, password, first_name, last_name FROM user WHERE email = ?`
+        row := database.DB.QueryRow(query, email)
+
+        if err := row.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">var user User
+        if err := row.Scan(&amp;user.ID, &amp;user.Username, &amp;user.Email, &amp;user.Password, &amp;user.FirstName, &amp;user.LastName); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return &amp;user, nil</span>
+}
+
 func (u *User) Delete() error <span class="cov8" title="1">{
         query := `DELETE FROM user WHERE user_id = ?`
         _, err := database.DB.Exec(query, u.ID)
@@ -294,6 +580,55 @@ func (u *User) Update() (*User, error) <span class="cov8" title="1">{
                 return nil, err
         }</span>
         <span class="cov8" title="1">return u, nil</span>
+}
+
+func (u *User) CheckDuplicate() (bool, error) <span class="cov0" title="0">{
+        query := `SELECT COUNT(*) FROM user WHERE username = ? OR email = ?`
+        var count int
+        if err := database.DB.QueryRow(query, u.Username, u.Email).Scan(&amp;count); err != nil </span><span class="cov0" title="0">{
+                return false, err
+        }</span>
+        <span class="cov0" title="0">return count &gt; 0, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package views
+
+import (
+        "html/template"
+        "net/http"
+        "path/filepath"
+)
+
+const (
+        viewsDir = "views/templates"
+)
+
+var tmpl = template.Must(template.ParseFiles(
+        filepath.Join(viewsDir, "header.html"),
+        filepath.Join(viewsDir, "footer.html"),
+        filepath.Join(viewsDir, "index.html"),
+        filepath.Join(viewsDir, "login.html"),
+        filepath.Join(viewsDir, "register.html"),
+        filepath.Join(viewsDir, "style.html"),
+))
+
+func IndexPage(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        RenderStaticPage(w, r, "index.html")
+}</span>
+
+func LoginPage(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        RenderStaticPage(w, r, "login.html")
+}</span>
+
+func RegisterPage(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        RenderStaticPage(w, r, "register.html")
+}</span>
+
+func RenderStaticPage(w http.ResponseWriter, r *http.Request, filename string) <span class="cov0" title="0">{
+        if err := tmpl.ExecuteTemplate(w, filename, nil); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+        }</span>
 }
 </pre>
 		
