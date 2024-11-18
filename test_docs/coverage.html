@@ -71,9 +71,11 @@
 				
 				<option value="file7">lets-go/models/problem/problem.go (86.2%)</option>
 				
-				<option value="file8">lets-go/models/user/user.go (51.4%)</option>
+				<option value="file8">lets-go/models/role/role.go (88.9%)</option>
 				
-				<option value="file9">lets-go/views/views.go (0.0%)</option>
+				<option value="file9">lets-go/models/user/user.go (51.4%)</option>
+				
+				<option value="file10">lets-go/views/views.go (0.0%)</option>
 				
 				</select>
 			</div>
@@ -573,7 +575,66 @@ func (p *Problem) Delete() error <span class="cov8" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package user_model
+		<pre class="file" id="file8" style="display: none">package role_model
+
+import (
+        "lets-go/database"
+)
+
+type Role struct {
+        ID   string `json:"role_id"`
+        Name string `json:"name"`
+}
+
+func GetAllRoles() ([]Role, error) <span class="cov8" title="1">{
+        rows, err := database.DB.Query("SELECT * FROM role")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var roles []Role
+        for rows.Next() </span><span class="cov8" title="1">{
+                var role Role
+                err := rows.Scan(&amp;role.ID, &amp;role.Name)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">roles = append(roles, role)</span>
+        }
+        <span class="cov8" title="1">return roles, nil</span>
+}
+
+func GetRole(id string) (*Role, error) <span class="cov8" title="1">{
+        row := database.DB.QueryRow("SELECT * FROM role WHERE role_id = ?", id)
+        var role Role
+        err := row.Scan(&amp;role.ID, &amp;role.Name)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;role, nil</span>
+}
+
+func (r *Role) Create() error <span class="cov8" title="1">{
+        query := "INSERT INTO role (role_id, name) VALUES (?, ?)"
+        _, err := database.DB.Exec(query, r.ID, r.Name)
+        return err
+}</span>
+
+func (r *Role) Update() error <span class="cov8" title="1">{
+        query := "UPDATE role SET name = ? WHERE role_id = ?"
+        _, err := database.DB.Exec(query, r.Name, r.ID)
+        return err
+}</span>
+
+func (r *Role) Delete() error <span class="cov8" title="1">{
+        query := "DELETE FROM role WHERE role_id = ?"
+        _, err := database.DB.Exec(query, r.ID)
+        return err
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package user_model
 
 import (
         "fmt"
@@ -656,7 +717,7 @@ func (u *User) CheckDuplicate() (bool, error) <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package views
+		<pre class="file" id="file10" style="display: none">package views
 
 import (
         "html/template"
