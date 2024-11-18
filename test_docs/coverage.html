@@ -67,11 +67,13 @@
 				
 				<option value="file5">lets-go/main.go (0.0%)</option>
 				
-				<option value="file6">lets-go/models/problem/problem.go (86.2%)</option>
+				<option value="file6">lets-go/models/language/language.go (86.2%)</option>
 				
-				<option value="file7">lets-go/models/user/user.go (51.4%)</option>
+				<option value="file7">lets-go/models/problem/problem.go (86.2%)</option>
 				
-				<option value="file8">lets-go/views/views.go (0.0%)</option>
+				<option value="file8">lets-go/models/user/user.go (51.4%)</option>
+				
+				<option value="file9">lets-go/views/views.go (0.0%)</option>
 				
 				</select>
 			</div>
@@ -442,7 +444,69 @@ func login(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">
 }
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">package problem_model
+		<pre class="file" id="file6" style="display: none">package language_model
+
+import (
+        "lets-go/database"
+)
+
+type Language struct {
+        ID   string `json:"language_id"`
+        Name string `json:"name"`
+}
+
+func GetAllLanguages() ([]Language, error) <span class="cov8" title="1">{
+        rows, err := database.DB.Query("SELECT * FROM language")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var languages []Language
+        for rows.Next() </span><span class="cov8" title="1">{
+                var language Language
+                err := rows.Scan(&amp;language.ID, &amp;language.Name)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">languages = append(languages, language)</span>
+        }
+        <span class="cov8" title="1">return languages, nil</span>
+}
+
+func GetLanguage(id string) (*Language, error) <span class="cov8" title="1">{
+        row := database.DB.QueryRow("SELECT * FROM language WHERE language_id = ?", id)
+        var language Language
+        err := row.Scan(&amp;language.ID, &amp;language.Name)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;language, nil</span>
+}
+
+func (l *Language) Create() error <span class="cov8" title="1">{
+        query := "INSERT INTO language (language_id, name) VALUES (?, ?)"
+        _, err := database.DB.Exec(query, l.ID, l.Name)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (l *Language) Update() error <span class="cov8" title="1">{
+        query := "UPDATE language SET name = ? WHERE language_id = ?"
+        _, err := database.DB.Exec(query, l.Name, l.ID)
+        return err
+}</span>
+
+func (l *Language) Delete() error <span class="cov8" title="1">{
+        query := "DELETE FROM language WHERE language_id = ?"
+        _, err := database.DB.Exec(query, l.ID)
+        return err
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package problem_model
 
 import (
         "lets-go/database"
@@ -509,7 +573,7 @@ func (p *Problem) Delete() error <span class="cov8" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package user_model
+		<pre class="file" id="file8" style="display: none">package user_model
 
 import (
         "fmt"
@@ -592,7 +656,7 @@ func (u *User) CheckDuplicate() (bool, error) <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package views
+		<pre class="file" id="file9" style="display: none">package views
 
 import (
         "html/template"
