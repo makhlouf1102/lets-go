@@ -39,8 +39,9 @@ func main() {
 	http.HandleFunc("/", views.IndexPage)
 	http.HandleFunc("/login", views.LoginPage)
 	http.HandleFunc("/register", views.RegisterPage)
-	http.Handle("/api/v1/auth/register", MethodMiddleware("POST", http.HandlerFunc(auth.Register)))
-	http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(auth.Login)))
+	http.Handle("POST /api/v1/auth/register", http.HandlerFunc(auth.Register))
+	http.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
+	http.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
 	fmt.Println("Server is running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -84,4 +85,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	w.WriteHeader(http.StatusOK)
 }
