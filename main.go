@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"lets-go/database"
 	"lets-go/handlers/auth"
@@ -55,36 +54,6 @@ func MethodMiddleware(method string, next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-func login(w http.ResponseWriter, r *http.Request) {
-	var loginData LoginData
-
-	defer r.Body.Close()
-
-	err := json.NewDecoder(r.Body).Decode(&loginData)
-	if err != nil {
-		http.Error(w, "invalid Json format", http.StatusBadRequest)
-	}
-
-	response := ResponseData{
-		Status:  "success",
-		Message: "success",
-		Data: map[string]string{
-			"email":    loginData.Email,
-			"password": loginData.Password,
-		},
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	w.WriteHeader(http.StatusOK)
-
-	err = json.NewEncoder(w).Encode(response)
-
-	if err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	}
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {

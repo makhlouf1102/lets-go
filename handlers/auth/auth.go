@@ -30,10 +30,11 @@ type LoginRequestData struct {
 }
 
 type LoginResponseData struct {
-	Status  string           `json:"status"`
-	Message string           `json:"message"`
-	Token   string           `json:"token"`
-	Data    *user_model.User `json:"data"`
+	Status       string           `json:"status"`
+	Message      string           `json:"message"`
+	AccessToken  string           `json:"accessToken"`
+	RefreshToken string           `json:"refreshToken"`
+	Data         *user_model.User `json:"data"`
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -108,16 +109,24 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := token.CreateToken(user.ID)
+	accessToken, err := token.CreateAccessToken(user.ID)
+	
 	if err != nil {
-		http.Error(w, "server error creating token", http.StatusInternalServerError)
+		http.Error(w, "server error creating access token", http.StatusInternalServerError)
+		return
+	}
+
+	refreshToken, err := token.CreateRefreshToken(user.ID)
+	if err != nil {
+		http.Error(w, "server error creating refresh token", http.StatusInternalServerError)
 		return
 	}
 
 	response := LoginResponseData{
 		Status:  "success",
 		Message: "User successfully logged in",
-		Token:   token,
+		AccessToken: accessToken,
+		RefreshToken: refreshToken,
 		Data:    user,
 	}
 

@@ -69,7 +69,8 @@
 
         if (response.ok) {
           const data = await response.json();
-          window.sessionStorage.setItem('token', data.token);
+          window.sessionStorage.setItem('refreshToken', data.refreshToken);
+          window.sessionStorage.setItem('accessToken', data.accessToken);
           window.location.href = '/';
         } else {
           alert('Login failed. Please try again.');
@@ -80,6 +81,7 @@
       }
     });
   </script>
+  <script type="module" src="./login.js"></script>
   {{template "footer"}}
 </body>
 </html>
