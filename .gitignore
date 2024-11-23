@@ -1,6 +1,7 @@
 .env
 bin/
 *.exe
+test_docs/
 
 
 

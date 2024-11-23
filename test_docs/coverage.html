@@ -67,15 +67,17 @@
 				
 				<option value="file5">lets-go/main.go (0.0%)</option>
 				
-				<option value="file6">lets-go/models/language/language.go (86.2%)</option>
+				<option value="file6">lets-go/middlewares/logger/logger.go (0.0%)</option>
 				
-				<option value="file7">lets-go/models/problem/problem.go (86.2%)</option>
+				<option value="file7">lets-go/models/language/language.go (86.2%)</option>
 				
-				<option value="file8">lets-go/models/role/role.go (88.9%)</option>
+				<option value="file8">lets-go/models/problem/problem.go (86.2%)</option>
 				
-				<option value="file9">lets-go/models/user/user.go (51.4%)</option>
+				<option value="file9">lets-go/models/role/role.go (88.9%)</option>
 				
-				<option value="file10">lets-go/views/views.go (0.0%)</option>
+				<option value="file10">lets-go/models/user/user.go (51.4%)</option>
+				
+				<option value="file11">lets-go/views/views.go (0.0%)</option>
 				
 				</select>
 			</div>
@@ -195,10 +197,10 @@ type LoginRequestData struct {
 }
 
 type LoginResponseData struct {
-        Status  string           `json:"status"`
-        Message string           `json:"message"`
-        Token   string           `json:"token"`
-        Data    *user_model.User `json:"data"`
+        Status       string           `json:"status"`
+        Message      string           `json:"message"`
+        AccessToken  string           `json:"accessToken"`
+        Data         *user_model.User `json:"data"`
 }
 
 func Register(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
@@ -273,19 +275,36 @@ func Login(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">
                 return
         }</span>
 
-        <span class="cov0" title="0">token, err := token.CreateToken(user.ID)
+        <span class="cov0" title="0">accessToken, err := token.CreateAccessToken(user.ID)
+        
         if err != nil </span><span class="cov0" title="0">{
-                http.Error(w, "server error creating token", http.StatusInternalServerError)
+                http.Error(w, "server error creating access token", http.StatusInternalServerError)
                 return
         }</span>
 
-        <span class="cov0" title="0">response := LoginResponseData{
-                Status:  "success",
-                Message: "User successfully logged in",
-                Token:   token,
-                Data:    user,
+        <span class="cov0" title="0">refreshToken, err := token.CreateRefreshToken(user.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "server error creating refresh token", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">cookie := http.Cookie {
+                Name: "refreshToken",
+                Value: refreshToken,
+                Path:     "/",
+        MaxAge:   3600 * 24 * 7,
+        HttpOnly: true,
+        Secure:   true,
+        SameSite: http.SameSiteLaxMode,
         }
 
+        response := LoginResponseData{
+                Status:  "success",
+                Message: "User successfully logged in",
+                AccessToken: accessToken,
+                Data:    user,
+        }
+        http.SetCookie(w, &amp;cookie)
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusOK)
 
@@ -337,30 +356,43 @@ func Get(key string) string <span class="cov0" title="0">{
 		<pre class="file" id="file4" style="display: none">package token
 
 import (
-        "time"
-        "github.com/golang-jwt/jwt/v5"
         "lets-go/libs/env"
+        "time"
+
+        "github.com/golang-jwt/jwt/v5"
 )
 
-func CreateToken(userID string) (string, error) <span class="cov0" title="0">{
-    // Set token claims
-    claims := jwt.MapClaims{
-        "user_id": userID,
-        "exp":     time.Now().Add(time.Hour * 24).Unix(), // Set expiration to 24 hours
-    }
+const (
+        refreshTokenExpiresIN time.Duration = time.Hour * 24 * 7
+        accessTokenExpiresIN  time.Duration = time.Minute * 15
+)
 
-    // Create the token using the claims and signing method
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+func CreateToken(userID string, secretKey []byte, expireIN time.Duration) (string, error) <span class="cov0" title="0">{
+        // Set token claims
+        claims := jwt.MapClaims{
+                "user_id": userID,
+                "exp":     time.Now().Add(expireIN).Unix(), // Set expiration to 24 hours
+        }
 
-    // Sign and return the token as a string
-        return token.SignedString([]byte(env.Get("SECRET_KEY")))
+        // Create the token using the claims and signing method
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+        // Sign and return the token as a string
+        return token.SignedString(secretKey)
+}</span>
+
+func CreateAccessToken(userID string) (string, error) <span class="cov0" title="0">{
+        return CreateToken(userID, []byte(env.Get("TOKEN_ACCESS_SECRET")), accessTokenExpiresIN)
+}</span>
+
+func CreateRefreshToken(userID string) (string, error) <span class="cov0" title="0">{
+        return CreateToken(userID, []byte(env.Get("TOKEN_REFRESH_SECRET")), refreshTokenExpiresIN)
 }</span>
 </pre>
 		
 		<pre class="file" id="file5" style="display: none">package main
 
 import (
-        "encoding/json"
         "fmt"
         "lets-go/database"
         "lets-go/handlers/auth"
@@ -398,8 +430,9 @@ func main() <span class="cov0" title="0">{
         http.HandleFunc("/", views.IndexPage)
         http.HandleFunc("/login", views.LoginPage)
         http.HandleFunc("/register", views.RegisterPage)
-        http.Handle("/api/v1/auth/register", MethodMiddleware("POST", http.HandlerFunc(auth.Register)))
-        http.Handle("/api/v1/auth/login", MethodMiddleware("POST", http.HandlerFunc(auth.Login)))
+        http.Handle("POST /api/v1/auth/register", http.HandlerFunc(auth.Register))
+        http.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
+        http.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
         fmt.Println("Server is running on http://localhost:8080")
         log.Fatal(http.ListenAndServe(":8080", nil))</span>
 }
@@ -415,38 +448,40 @@ func MethodMiddleware(method string, next http.Handler) http.Handler <span class
         })
 }
 
-func login(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
-        var loginData LoginData
-
-        defer r.Body.Close()
-
-        err := json.NewDecoder(r.Body).Decode(&amp;loginData)
-        if err != nil </span><span class="cov0" title="0">{
-                http.Error(w, "invalid Json format", http.StatusBadRequest)
-        }</span>
-
-        <span class="cov0" title="0">response := ResponseData{
-                Status:  "success",
-                Message: "success",
-                Data: map[string]string{
-                        "email":    loginData.Email,
-                        "password": loginData.Password,
-                },
-        }
-
+func ping(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
         w.Header().Set("Content-Type", "application/json")
 
         w.WriteHeader(http.StatusOK)
-
-        err = json.NewEncoder(w).Encode(response)
-
-        if err != nil </span><span class="cov0" title="0">{
-                http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-        }</span>
-}
+}</span>
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">package language_model
+		<pre class="file" id="file6" style="display: none">package logger_middleware
+
+import (
+        "log"
+        "net/http"
+        "time"
+)
+
+type Logger struct {
+        handler http.Handler
+}
+
+// ServeHTTP handles the request by passing it to the real
+// handler and logging the request details
+func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        start := time.Now()
+        l.handler.ServeHTTP(w, r)
+        log.Printf("%s %s %v", r.Method, r.URL.Path, time.Since(start))
+}</span>
+
+// NewLogger constructs a new Logger middleware handler
+func NewLogger(handlerToWrap http.Handler) *Logger <span class="cov0" title="0">{
+        return &amp;Logger{handlerToWrap}
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package language_model
 
 import (
         "lets-go/database"
@@ -508,7 +543,7 @@ func (l *Language) Delete() error <span class="cov8" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package problem_model
+		<pre class="file" id="file8" style="display: none">package problem_model
 
 import (
         "lets-go/database"
@@ -575,7 +610,7 @@ func (p *Problem) Delete() error <span class="cov8" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package role_model
+		<pre class="file" id="file9" style="display: none">package role_model
 
 import (
         "lets-go/database"
@@ -634,7 +669,7 @@ func (r *Role) Delete() error <span class="cov8" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package user_model
+		<pre class="file" id="file10" style="display: none">package user_model
 
 import (
         "fmt"
@@ -717,7 +752,7 @@ func (u *User) CheckDuplicate() (bool, error) <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file10" style="display: none">package views
+		<pre class="file" id="file11" style="display: none">package views
 
 import (
         "html/template"

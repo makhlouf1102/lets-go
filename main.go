@@ -10,23 +10,6 @@ import (
 	"net/http"
 )
 
-type LoginData struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type RegisterData struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type ResponseData struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
-	Data    any    `json:"data"`
-}
-
 func main() {
 	env.Load()
 
@@ -58,6 +41,5 @@ func MethodMiddleware(method string, next http.Handler) http.Handler {
 
 func ping(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
 	w.WriteHeader(http.StatusOK)
 }
