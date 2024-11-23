@@ -8,6 +8,7 @@ import (
 	"lets-go/views"
 	"log"
 	"net/http"
+	"lets-go/middlewares/logger"
 )
 
 func main() {
@@ -18,14 +19,19 @@ func main() {
 	}
 	defer database.DB.Close()
 
-	http.HandleFunc("/", views.IndexPage)
-	http.HandleFunc("/login", views.LoginPage)
-	http.HandleFunc("/register", views.RegisterPage)
-	http.Handle("POST /api/v1/auth/register", http.HandlerFunc(auth.Register))
-	http.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
-	http.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
+	mux :=  http.NewServeMux()
+
+	mux.HandleFunc("/", views.IndexPage)
+	mux.HandleFunc("/login", views.LoginPage)
+	mux.HandleFunc("/register", views.RegisterPage)
+	mux.Handle("POST /api/v1/auth/register", http.HandlerFunc(auth.Register))
+	mux.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
+	mux.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
+	
+	wrapperMux := logger_middleware.NewLogger(mux)
+	
 	fmt.Println("Server is running on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", wrapperMux))
 }
 
 // Request Middleware

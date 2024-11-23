@@ -42,3 +42,10 @@ CREATE TABLE language (
     language_id CHAR(36) PRIMARY KEY,
     name TEXT NOT NULL
 );
+
+CREATE TABLE session {
+    session_id CHAR(36) PRIMARY KEY,
+    user_id CHAR(36) NOT NULL,
+    refreshToken TEXT NOT NULL,
+    FOREIGN_KEY (user_id) REFERENCES user(user_id),
+}
