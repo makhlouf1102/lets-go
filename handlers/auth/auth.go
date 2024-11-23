@@ -33,7 +33,6 @@ type LoginResponseData struct {
 	Status       string           `json:"status"`
 	Message      string           `json:"message"`
 	AccessToken  string           `json:"accessToken"`
-	RefreshToken string           `json:"refreshToken"`
 	Data         *user_model.User `json:"data"`
 }
 
@@ -122,14 +121,23 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookie := http.Cookie {
+		Name: "refreshToken",
+		Value: refreshToken,
+		Path:     "/",
+        MaxAge:   3600 * 24 * 7,
+        HttpOnly: true,
+        Secure:   true,
+        SameSite: http.SameSiteLaxMode,
+	}
+
 	response := LoginResponseData{
 		Status:  "success",
 		Message: "User successfully logged in",
 		AccessToken: accessToken,
-		RefreshToken: refreshToken,
 		Data:    user,
 	}
-
+	http.SetCookie(w, &cookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
