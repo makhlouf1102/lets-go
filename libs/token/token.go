@@ -1,6 +1,7 @@
 package token
 
 import (
+	"errors"
 	"lets-go/libs/env"
 	"time"
 
@@ -21,10 +22,41 @@ func CreateToken(userID string, secretKey []byte, expireIN time.Duration) (strin
 
 	// Create the token using the claims and signing method
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
 	// Sign and return the token as a string
 	return token.SignedString(secretKey)
 }
+
+func Parse(tokenString string, secretkey []byte) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Ensure the signing method is HMAC and not tampered
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+		return secretkey, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return token, nil
+}
+
+func ExtractClaims(tokenStr string, secretKey []byte) (jwt.MapClaims, error) {
+	token, err := Parse(tokenStr, secretKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		return claims, nil
+	}
+	return nil, errors.New("unable to extract claims")
+} 
 
 func CreateAccessToken(userID string) (string, error) {
 	return CreateToken(userID, []byte(env.Get("TOKEN_ACCESS_SECRET")), accessTokenExpiresIN)
@@ -32,9 +64,4 @@ func CreateAccessToken(userID string) (string, error) {
 
 func CreateRefreshToken(userID string) (string, error) {
 	return CreateToken(userID, []byte(env.Get("TOKEN_REFRESH_SECRET")), refreshTokenExpiresIN)
-}
-
-func IsValid(accessToken string) (bool, error) {
-	// TODO
-	return true, nil
 }
