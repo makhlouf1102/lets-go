@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"lets-go/libs/bcrypt"
+	"lets-go/libs/env"
 	"lets-go/libs/token"
 	user_model "lets-go/models/user"
 	"net/http"
@@ -122,7 +123,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie := http.Cookie {
-		Name: "refreshToken",
+		Name: env.Get("REFRESH_HTTP_COOKIE_NAME"),
 		Value: refreshToken,
 		Path:     "/",
         MaxAge:   3600 * 24 * 7,

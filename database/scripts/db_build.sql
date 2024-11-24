@@ -47,5 +47,5 @@ CREATE TABLE session {
     session_id CHAR(36) PRIMARY KEY,
     user_id CHAR(36) NOT NULL,
     refreshToken TEXT NOT NULL,
-    FOREIGN_KEY (user_id) REFERENCES user(user_id),
+    FOREIGN_KEY (user_id) REFERENCES user(user_id)
 }

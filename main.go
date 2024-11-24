@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"lets-go/middlewares/logger"
+	"lets-go/middlewares/auth"
 )
 
 func main() {
@@ -27,22 +28,12 @@ func main() {
 	mux.Handle("POST /api/v1/auth/register", http.HandlerFunc(auth.Register))
 	mux.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
 	mux.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
+	mux.Handle("GET /api/v1/ping-protected", auth_middleware.NewTokenRefresher(http.HandlerFunc(ping)))
 	
 	wrapperMux := logger_middleware.NewLogger(mux)
 	
 	fmt.Println("Server is running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", wrapperMux))
-}
-
-// Request Middleware
-func MethodMiddleware(method string, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != method {
-			http.Error(w, "Bad request should be "+method, http.StatusMethodNotAllowed)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {

@@ -33,3 +33,8 @@ func CreateAccessToken(userID string) (string, error) {
 func CreateRefreshToken(userID string) (string, error) {
 	return CreateToken(userID, []byte(env.Get("TOKEN_REFRESH_SECRET")), refreshTokenExpiresIN)
 }
+
+func IsValid(accessToken string) (bool, error) {
+	// TODO
+	return true, nil
+}
