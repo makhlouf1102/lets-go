@@ -6,6 +6,7 @@ import (
 	"lets-go/libs/env"
 	"lets-go/libs/token"
 	user_model "lets-go/models/user"
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -31,10 +32,10 @@ type LoginRequestData struct {
 }
 
 type LoginResponseData struct {
-	Status       string           `json:"status"`
-	Message      string           `json:"message"`
-	AccessToken  string           `json:"accessToken"`
-	Data         *user_model.User `json:"data"`
+	Status      string           `json:"status"`
+	Message     string           `json:"message"`
+	AccessToken string           `json:"accessToken"`
+	Data        *user_model.User `json:"data"`
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -100,50 +101,53 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := user_model.GetByEmail(dataObj.Email)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		http.Error(w, "invalid login", http.StatusUnauthorized)
 		return
 	}
 
 	if !bcrypt.CheckPasswordHash(dataObj.Password, user.Password) {
-		http.Error(w, "invalid password", http.StatusUnauthorized)
+		http.Error(w, "invalid login", http.StatusUnauthorized)
 		return
 	}
 
 	accessToken, err := token.CreateAccessToken(user.ID)
-	
+
 	if err != nil {
-		http.Error(w, "server error creating access token", http.StatusInternalServerError)
+		http.Error(w, "server error", http.StatusInternalServerError)
+		log.Fatal("server error creating access token")
 		return
 	}
 
 	refreshToken, err := token.CreateRefreshToken(user.ID)
 	if err != nil {
-		http.Error(w, "server error creating refresh token", http.StatusInternalServerError)
+		log.Fatal("server error creating refresh token")
+		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
 
-	cookie := http.Cookie {
-		Name: env.Get("REFRESH_HTTP_COOKIE_NAME"),
-		Value: refreshToken,
+	cookie := http.Cookie{
+		Name:     env.Get("REFRESH_HTTP_COOKIE_NAME"),
+		Value:    refreshToken,
 		Path:     "/",
-        MaxAge:   3600 * 24 * 7,
-        HttpOnly: true,
-        Secure:   true,
-        SameSite: http.SameSiteLaxMode,
+		MaxAge:   3600 * 24 * 7,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	response := LoginResponseData{
-		Status:  "success",
-		Message: "User successfully logged in",
+		Status:      "success",
+		Message:     "User successfully logged in",
 		AccessToken: accessToken,
-		Data:    user,
+		Data:        user,
 	}
 	http.SetCookie(w, &cookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "server error encoding response", http.StatusInternalServerError)
+		log.Fatal("server error encoding response")
+		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
 }
