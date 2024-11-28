@@ -20,6 +20,18 @@ CREATE TABLE user_role (
     FOREIGN KEY (role_id) REFERENCES role(role_id)
 );
 
+CREATE TABLE language (
+    language_id CHAR(36) PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE problem (
+    problem_id CHAR(36) PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    difficulty TEXT NOT NULL
+);
+
 CREATE TABLE solved_problem (
     solved_problem_id CHAR(36) PRIMARY KEY,
     user_id CHAR(36) NOT NULL,
@@ -30,22 +42,3 @@ CREATE TABLE solved_problem (
     FOREIGN KEY (problem_id) REFERENCES problem(problem_id),
     FOREIGN KEY (language_id) REFERENCES language(language_id)
 );
-
-CREATE TABLE problem (
-    problem_id CHAR(36) PRIMARY KEY,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    difficulty TEXT NOT NULL
-);
-
-CREATE TABLE language (
-    language_id CHAR(36) PRIMARY KEY,
-    name TEXT NOT NULL
-);
-
-CREATE TABLE session {
-    session_id CHAR(36) PRIMARY KEY,
-    user_id CHAR(36) NOT NULL,
-    refreshToken TEXT NOT NULL,
-    FOREIGN_KEY (user_id) REFERENCES user(user_id)
-}
