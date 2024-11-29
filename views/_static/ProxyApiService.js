@@ -1,28 +1,30 @@
 import { catchError } from "./catchError";
-export class ApiService {
+import { JSON_ERROR, SERVER_ERROR } from "./errorsConst";
+export class ProxyApiService {
 
     prefix = "/api/v1"
+    api = ApiService
+    
+
+    async protectedRoute(request) {
+        // TODO : manage refresh token
+        // Do stuff to verify the token
+        request()
+    }
 
     async login(email, password) {
-        const formData = {
-            email: email,
-            password: password
+        [error, response] = await catchError(this.api.login(email, password))
+
+        if (error) throw Error(SERVER_ERROR)
+        
+        if (!response.ok) {
+            // TODO : Manage the bad login responses
         }
+        
+        [error, responseJson] = await catchError(response.JSON())
 
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        }
-
-        const [error, data] = await catchError(fetch(`${this.prefix}/auth/login`, options))
-
-        if (error) {
-            throw Error("server error")
-        }
-
-        return data
+        if (error) throw Error(JSON_ERROR)
+        
+        return responseJson
     }
 }
