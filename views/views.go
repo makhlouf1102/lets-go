@@ -31,6 +31,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	RenderStaticPage(w, r, "register.html")
 }
 
+
 func RenderStaticPage(w http.ResponseWriter, r *http.Request, filename string) {
 	if err := tmpl.ExecuteTemplate(w, filename, nil); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

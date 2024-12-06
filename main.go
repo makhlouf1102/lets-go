@@ -5,11 +5,11 @@ import (
 	"lets-go/database"
 	"lets-go/handlers/auth"
 	"lets-go/libs/env"
+	auth_middleware "lets-go/middlewares/auth"
+	logger_middleware "lets-go/middlewares/logger"
 	"lets-go/views"
 	"log"
 	"net/http"
-	"lets-go/middlewares/logger"
-	"lets-go/middlewares/auth"
 )
 
 func main() {
@@ -20,8 +20,9 @@ func main() {
 	}
 	defer database.DB.Close()
 
-	mux :=  http.NewServeMux()
+	mux := http.NewServeMux()
 
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	mux.HandleFunc("/", views.IndexPage)
 	mux.HandleFunc("/login", views.LoginPage)
 	mux.HandleFunc("/register", views.RegisterPage)
@@ -29,9 +30,9 @@ func main() {
 	mux.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
 	mux.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
 	mux.Handle("GET /api/v1/ping-protected", auth_middleware.NewTokenRefresher(http.HandlerFunc(ping)))
-	
+
 	wrapperMux := logger_middleware.NewLogger(mux)
-	
+
 	fmt.Println("Server is running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", wrapperMux))
 }

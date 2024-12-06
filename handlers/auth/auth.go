@@ -131,7 +131,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   3600 * 24 * 7,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	}
 

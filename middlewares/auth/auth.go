@@ -11,9 +11,7 @@ import (
 )
 
 var (
-	accessSecret  = env.Get("TOKEN_ACCESS_SECRET")
 	refreshSecret = env.Get("TOKEN_REFRESH_SECRET")
-	cookieName    = env.Get("REFRESH_HTTP_COOKIE_NAME")
 )
 
 type TokenRefresher struct {
@@ -29,8 +27,8 @@ type ResponseToken struct {
 func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	accessTokenStr := r.Header.Get("Authorization")
 	if accessTokenStr != "" {
-		
-		accessToken, err := token.Parse(accessTokenStr, accessSecret)
+
+		accessToken, err := token.Parse(accessTokenStr, env.Get("TOKEN_ACCESS_SECRET"))
 		if err != nil {
 			log.Println("error parsing access token:", err)
 			http.Error(w, "server error", http.StatusInternalServerError)
@@ -43,7 +41,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	refreshCookie, err := r.Cookie(cookieName)
+	refreshCookie, err := r.Cookie(env.Get("REFRESH_HTTP_COOKIE_NAME"))
 	if err != nil {
 		log.Println("failed to get refresh token cookie:", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -52,7 +50,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	refreshTokenStr := refreshCookie.Value
 
-	refreshToken, err := token.Parse(refreshTokenStr, refreshSecret)
+	refreshToken, err := token.Parse(refreshTokenStr, env.Get("TOKEN_REFRESH_SECRET"))
 	if err != nil {
 		log.Println("error parsing refresh token:", err)
 		http.Error(w, "server error", http.StatusInternalServerError)
@@ -64,7 +62,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshClaims, err := token.ExtractClaims(refreshToken, []byte(refreshSecret))
+	refreshClaims, err := token.ExtractClaims(refreshToken, []byte(env.Get("TOKEN_REFRESH_SECRET")))
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
@@ -96,12 +94,12 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:     cookieName,
+			Name:     env.Get("REFRESH_HTTP_COOKIE_NAME"),
 			Value:    newRefreshToken,
 			Path:     "/",
 			MaxAge:   3600 * 24 * 7,
 			HttpOnly: true,
-			Secure:   true, // Ensure this is conditional for non-HTTPS environments
+			Secure:   false,
 			SameSite: http.SameSiteLaxMode,
 		})
 	}
@@ -114,7 +112,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := ResponseToken{
-		Status:      "success",
+		Status:      "New Token",
 		Message:     "New token sent to you",
 		AccessToken: newAccessToken,
 	}
