@@ -11,25 +11,28 @@ export const proxyApiService = {
 
         let [error, response] = await catchError(request());
 
-        if (error) throw Error(SERVER_ERROR)
-
-        if (!response.ok && (response.status == "403" || response.status == "401")) {
-            window.sessionStorage.removeItem("accessToken")
-            throw Error(INVALID_AUTH_ERROR)
-        } else {
-            let [errorJson, responseJson] = await response.json()
-
-            if (errorJson) throw Error(JSON_ERROR)
-
-            if (responseJson.status == "New Token") {
-                window.sessionStorage.setItem('accessToken', data.accessToken);
-
-                return await catchError(request())
-
-            }
+        if (error) {
+            return [error, null]; 
         }
 
-        return response
+        if (!response.ok && (response.status === 403 || response.status === 401)) {
+            window.sessionStorage.removeItem("accessToken");
+            return [new Error(INVALID_AUTH_ERROR), null];
+        }
+
+        let [errorJson, responseJson] = await catchError(response.json());
+
+        if (errorJson) {
+            return [new Error(JSON_ERROR), null];
+        }
+
+        if (responseJson.status === "New Token") {
+            window.sessionStorage.setItem('accessToken', responseJson.accessToken);
+
+            return await catchError(request());
+        }
+
+        return [null, response];
     },
 
     async login(email, password) {
@@ -67,12 +70,17 @@ export const proxyApiService = {
     },
 
     async pingProtected() {
-        let [error, response] = await (this.protectedRoute(() => apiService.pingProtected()))
+        let [error, response] = await this.protectedRoute(() => apiService.pingProtected());
 
-        if (error) throw Error(SERVER_ERROR)
-        
-        if (!response.ok) throw Error(response.status)
+        if (error) {
+            throw new Error(SERVER_ERROR); // Re-throw error to propagate it up
+        }
 
-        return true
+        if (!response.ok) {
+            throw new Error(response.status);
+        }
+
+        return true;
     }
+
 }
