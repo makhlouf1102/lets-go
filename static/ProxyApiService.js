@@ -73,7 +73,7 @@ export const proxyApiService = {
         let [error, response] = await this.protectedRoute(() => apiService.pingProtected());
 
         if (error) {
-            throw new Error(SERVER_ERROR); // Re-throw error to propagate it up
+            throw new Error(SERVER_ERROR);
         }
 
         if (!response.ok) {
