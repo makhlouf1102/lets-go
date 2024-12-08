@@ -5,7 +5,9 @@ import (
 	"lets-go/libs/bcrypt"
 	"lets-go/libs/env"
 	"lets-go/libs/token"
+	role_model "lets-go/models/role"
 	user_model "lets-go/models/user"
+	user_role_model "lets-go/models/user_role"
 	"log"
 	"net/http"
 
@@ -73,10 +75,33 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role, err := role_model.GetRole("User")
+
+	if err != nil {
+		http.Error(w, "server error while getting the roles", http.StatusInternalServerError)
+		return
+	}
+
+	user_role := &user_role_model.UserRole{
+		ID:     uuid.New().String(),
+		UserID: user.ID,
+		RoleID: role.Name,
+	}
+
+	if duplicate, err := user_role.CheckDuplicate(); err != nil || duplicate {
+		http.Error(w, "server error while setting up the roles", http.StatusInternalServerError)
+		return
+	}
+
+	if err := user_role.Create(); err != nil {
+		http.Error(w, "Server Error roles", http.StatusInternalServerError)
+		return
+	}
+
 	response := RegisterResponseData{
 		Status:  "success",
 		Message: "User successfully registered",
-		Data:    user,
+		Data:    nil,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -110,7 +135,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := token.CreateAccessToken(user.ID)
+	user_roles, err := user_role_model.GetByUserID(user.ID)
+
+	listRoles := make([]string, len(user_roles))
+
+	for i, role := range user_roles {
+		listRoles[i] = role.RoleID
+	}
+
+	if err != nil {
+		http.Error(w, "server error while getting the user role", http.StatusInternalServerError)
+		return
+	}
+
+	accessToken, err := token.CreateAccessToken(user.ID, listRoles)
 
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
@@ -118,7 +156,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, err := token.CreateRefreshToken(user.ID)
+	refreshToken, err := token.CreateRefreshToken(user.ID, listRoles)
 	if err != nil {
 		log.Fatal("server error creating refresh token")
 		http.Error(w, "server error", http.StatusInternalServerError)

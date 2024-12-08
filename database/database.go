@@ -25,6 +25,12 @@ func InitializeDB(dataSourceName string) error {
 			return err
 		}
 
+		productionInsertsScript, err := os.ReadFile("./database/scripts/production_inserts.sql")
+		if err != nil {
+			return err
+		}
+		buildScript = append(buildScript, productionInsertsScript...)
+
 		if _, err = DB.Exec(string(buildScript)); err != nil {
 			return err
 		}

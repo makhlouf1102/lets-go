@@ -5,12 +5,11 @@ import (
 )
 
 type Role struct {
-	ID   string `json:"role_id"`
 	Name string `json:"name"`
 }
 
 func GetAllRoles() ([]Role, error) {
-	rows, err := database.DB.Query("SELECT * FROM role")
+	rows, err := database.DB.Query("SELECT name FROM role")
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +18,7 @@ func GetAllRoles() ([]Role, error) {
 	var roles []Role
 	for rows.Next() {
 		var role Role
-		err := rows.Scan(&role.ID, &role.Name)
+		err := rows.Scan(&role.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -28,10 +27,10 @@ func GetAllRoles() ([]Role, error) {
 	return roles, nil
 }
 
-func GetRole(id string) (*Role, error) {
-	row := database.DB.QueryRow("SELECT * FROM role WHERE role_id = ?", id)
+func GetRole(name string) (*Role, error) {
+	row := database.DB.QueryRow("SELECT name FROM role WHERE name = ?", name)
 	var role Role
-	err := row.Scan(&role.ID, &role.Name)
+	err := row.Scan(&role.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -39,19 +38,20 @@ func GetRole(id string) (*Role, error) {
 }
 
 func (r *Role) Create() error {
-	query := "INSERT INTO role (role_id, name) VALUES (?, ?)"
-	_, err := database.DB.Exec(query, r.ID, r.Name)
+	query := "INSERT INTO role (name) VALUES (?)"
+	_, err := database.DB.Exec(query, r.Name)
 	return err
 }
 
-func (r *Role) Update() error {
-	query := "UPDATE role SET name = ? WHERE role_id = ?"
-	_, err := database.DB.Exec(query, r.Name, r.ID)
+func (r *Role) Update(newName string) error {
+	query := "UPDATE role SET name = ? WHERE name = ?"
+	_, err := database.DB.Exec(query, newName, r.Name)
+	r.Name = newName // Update local struct after DB update
 	return err
 }
 
 func (r *Role) Delete() error {
-	query := "DELETE FROM role WHERE role_id = ?"
-	_, err := database.DB.Exec(query, r.ID)
+	query := "DELETE FROM role WHERE name = ?"
+	_, err := database.DB.Exec(query, r.Name)
 	return err
 }

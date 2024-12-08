@@ -30,7 +30,7 @@ func TestGetAllRoles(t *testing.T) {
 }
 
 func TestGetRole(t *testing.T) {
-	role, err := GetRole("uuid1")
+	role, err := GetRole("Admin")
 	if err != nil {
 		t.Fatalf("Failed to get role: %v", err)
 	}
@@ -42,7 +42,6 @@ func TestGetRole(t *testing.T) {
 
 func TestCreateRole(t *testing.T) {
 	role := &Role{
-		ID:   "uuid4",
 		Name: "Tester",
 	}
 
@@ -51,7 +50,7 @@ func TestCreateRole(t *testing.T) {
 		t.Fatalf("Failed to create role: %v", err)
 	}
 
-	createdRole, err := GetRole("uuid4")
+	createdRole, err := GetRole("Tester")
 	if err != nil {
 		t.Fatalf("Failed to get created role: %v", err)
 	}
@@ -63,16 +62,15 @@ func TestCreateRole(t *testing.T) {
 
 func TestUpdateRole(t *testing.T) {
 	role := &Role{
-		ID:   "uuid1",
-		Name: "SuperAdmin",
+		Name: "Admin",
 	}
 
-	err := role.Update()
+	err := role.Update("SuperAdmin")
 	if err != nil {
 		t.Fatalf("Failed to update role: %v", err)
 	}
 
-	updatedRole, err := GetRole("uuid1")
+	updatedRole, err := GetRole("SuperAdmin")
 	if err != nil {
 		t.Fatalf("Failed to get updated role: %v", err)
 	}
@@ -80,6 +78,8 @@ func TestUpdateRole(t *testing.T) {
 	if updatedRole.Name != "SuperAdmin" {
 		t.Errorf("Expected name to be 'SuperAdmin', got %s", updatedRole.Name)
 	}
+
+	
 }
 
 func TestDeleteRole(t *testing.T) {
@@ -88,7 +88,7 @@ func TestDeleteRole(t *testing.T) {
 		t.Fatalf("Failed to get all roles: %v", err)
 	}
 
-	role, err := GetRole("uuid1")
+	role, err := GetRole("SuperAdmin")
 	if err != nil {
 		t.Fatalf("Failed to get role: %v", err)
 	}

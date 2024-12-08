@@ -13,11 +13,12 @@ const (
 	accessTokenExpiresIN  time.Duration = time.Minute * 15
 )
 
-func CreateToken(userID string, secretKey []byte, expireIN time.Duration) (string, error) {
+func CreateToken(userID string, secretKey []byte, expireIN time.Duration, lislistRoles []string) (string, error) {
 	// Set token claims
 	claims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(expireIN).Unix(), // Set expiration to 24 hours
+		"user_id":    userID,
+		"user_roles": lislistRoles,
+		"exp":        time.Now().Add(expireIN).Unix(), // Set expiration to 24 hours
 	}
 
 	// Create the token using the claims and signing method
@@ -48,10 +49,10 @@ func ExtractClaims(token *jwt.Token, secretKey []byte) (jwt.MapClaims, error) {
 	return nil, errors.New("unable to extract claims")
 }
 
-func CreateAccessToken(userID string) (string, error) {
-	return CreateToken(userID, []byte(env.Get("TOKEN_ACCESS_SECRET")), accessTokenExpiresIN)
+func CreateAccessToken(userID string, listRoles []string) (string, error) {
+	return CreateToken(userID, []byte(env.Get("TOKEN_ACCESS_SECRET")), accessTokenExpiresIN, listRoles)
 }
 
-func CreateRefreshToken(userID string) (string, error) {
-	return CreateToken(userID, []byte(env.Get("TOKEN_REFRESH_SECRET")), refreshTokenExpiresIN)
+func CreateRefreshToken(userID string, listRoles []string) (string, error) {
+	return CreateToken(userID, []byte(env.Get("TOKEN_REFRESH_SECRET")), refreshTokenExpiresIN, listRoles)
 }

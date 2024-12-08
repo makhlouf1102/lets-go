@@ -73,6 +73,12 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userRoles, ok := refreshClaims["user_roles"].([]string)
+	if !ok {
+		http.Error(w, "invalid token claims", http.StatusForbidden)
+		return
+	}
+
 	expirationTime, err := refreshClaims.GetExpirationTime()
 	if err != nil {
 		log.Println("error getting expiration time:", err)
@@ -86,7 +92,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if time.Now().Add(24 * time.Hour).After(expirationTime.Time) {
-		newRefreshToken, err := token.CreateRefreshToken(userId)
+		newRefreshToken, err := token.CreateRefreshToken(userId, userRoles)
 		if err != nil {
 			log.Println("error creating new refresh token:", err)
 			http.Error(w, "server error", http.StatusInternalServerError)
@@ -104,7 +110,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	newAccessToken, err := token.CreateAccessToken(userId)
+	newAccessToken, err := token.CreateAccessToken(userId, userRoles)
 	if err != nil {
 		log.Println("error creating new access token:", err)
 		http.Error(w, "server error", http.StatusInternalServerError)

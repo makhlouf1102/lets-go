@@ -8,8 +8,7 @@ CREATE TABLE user (
 );
 
 CREATE TABLE role (
-    role_id CHAR(36) PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT PRIMARY KEY
 );
 
 CREATE TABLE user_role (

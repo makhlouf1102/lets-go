@@ -1,3 +1,3 @@
-INSERT INTO role (role_id, name) VALUES ('uuid1', 'Admin');
-INSERT INTO role (role_id, name) VALUES ('uuid2', 'User');
-INSERT INTO role (role_id, name) VALUES ('uuid3', 'Guest');
+INSERT INTO role (name) VALUES ('Admin');
+INSERT INTO role (name) VALUES ('User');
+INSERT INTO role (name) VALUES ('Guest');
