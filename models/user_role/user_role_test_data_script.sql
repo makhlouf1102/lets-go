@@ -6,11 +6,11 @@ VALUES
     ('testuser3', 'testuser3', 'test3@example.com', 'password3', 'Test3', 'User3');
 
 -- Insérer des rôles dans la table `role`
-INSERT INTO role (role_id, name)
+INSERT INTO role (name)
 VALUES 
-    ('testrole1', 'Admin'),
-    ('testrole2', 'Editor'),
-    ('testrole3', 'Viewer');
+    ('Admin'),
+    ('Editor'),
+    ('Viewer');
 
 -- Insérer des relations utilisateur-rôle dans la table `user_role`
 INSERT INTO user_role (user_role_id, user_id, role_id)
