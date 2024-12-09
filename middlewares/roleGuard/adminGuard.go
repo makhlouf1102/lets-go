@@ -1,7 +1,6 @@
 package logger_middleware
 
 import (
-	"lets-go/libs/token"
 	"log"
 	"net/http"
 	"time"
@@ -18,7 +17,7 @@ func (a *AdminGuar) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// if protectedData, ok := r.Context().Value("protected_data").(token.TokenClaim); !ok {
 	// 	http.Error(w, "server error", http.StatusInternalServerError)
 	// 	return
-	// } 
+	// }
 	// userRole = protectedData["userRoles"].([]string)
 	start := time.Now()
 	a.handler.ServeHTTP(w, r)
