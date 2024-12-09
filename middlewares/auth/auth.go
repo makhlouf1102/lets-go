@@ -1,6 +1,7 @@
 package auth_middleware
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -36,7 +37,33 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if accessToken.Valid {
-			t.handler.ServeHTTP(w, r)
+
+			accessClaims, err := token.ExtractClaims(accessToken, []byte(env.Get("TOKEN_ACCESS_SECRET")))
+			if err != nil {
+				http.Error(w, "server error", http.StatusInternalServerError)
+				return
+			}
+
+			userId, ok := accessClaims["user_id"].(string)
+			if !ok {
+				http.Error(w, "invalid token claims", http.StatusForbidden)
+				return
+			}
+
+			userRoles, ok := accessClaims["user_roles"].([]string)
+			if !ok {
+				http.Error(w, "invalid token claims", http.StatusForbidden)
+				return
+			}
+
+			data := token.TokenClaim{
+				UserID:    userId,
+				UserRoles: userRoles,
+			}
+
+			ctx := context.WithValue(r.Context(), "protected_data", data)
+
+			t.handler.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 	}
@@ -67,6 +94,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
+
 	userId, ok := refreshClaims["user_id"].(string)
 	if !ok {
 		http.Error(w, "invalid token claims", http.StatusForbidden)
