@@ -23,6 +23,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	mux.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 	mux.HandleFunc("/", views.IndexPage)
 	mux.HandleFunc("/login", views.LoginPage)
 	mux.HandleFunc("/register", views.RegisterPage)

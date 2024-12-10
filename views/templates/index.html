@@ -1,40 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     {{template "style"}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>1102 Online Code Editor</title>
-</head>
 <body>
     {{template "header"}}
-    <main class="min-h-screen bg-base-200 p-8">
-        <div class="max-w-2xl mx-auto">
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
-                    <h1 class="card-title text-3xl font-bold mb-4">Welcome to LeetCode Clone</h1>
-                    <p class="text-lg mb-4">This project demonstrates a full-featured coding platform built with Golang.</p>
-                    <div class="alert alert-info">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <div>
-                            <div class="font-bold">Demo Account</div>
-                            <div class="text-sm">
-                                Email: test@test.com<br>
-                                Password: test
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-actions justify-end mt-4">
-                        <a href="/problems" class="btn btn-primary">Start Coding</a>
-                    </div>
-                    <button id="testtest" class="card-actions justify-end mt-4 btn-primary">
-                        Protected Ping
-                    </div>
-                </div>
-            </div>
-        </div>
+    <main>
+        <sl-card>
+            <img slot="image" src="/public/test.gif" alt="Descriptive Alt Text">
+            <h1 slot="header">Start Coding with LeetCode Clone</h1>
+            <p>Enhance your skills with our challenges and become a coding master.</p>
+            <sl-button type="primary" href="/problems">Explore Problems</sl-button>
+        </sl-card>
     </main>
     <script type="module" src="/static/index.js"></script>
     {{template "footer"}}
 </body>
+
+
 </html>
