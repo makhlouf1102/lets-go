@@ -144,6 +144,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		log.Fatal("server error setting up roles")
 		http.Error(w, "server error while getting the user role", http.StatusInternalServerError)
 		return
 	}
@@ -151,8 +152,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := token.CreateAccessToken(user.ID, listRoles)
 
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
 		log.Fatal("server error creating access token")
+		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
 
