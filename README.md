@@ -22,3 +22,12 @@ sh ./run.sh
 
 ## The router sucks
 - I have to find a way to use routes like in express js
+
+## Logging 
+- have to make add a Logging lib to save every api call and every
+
+## Interfaces
+- Have to understand interfaces well and use them so I can finally write clean code
+
+## Errors
+- Have to manage the errors well because the way it is done is suuuuuuuuuuuuupppppppppppppppppeeeeeerrrr crazy ...

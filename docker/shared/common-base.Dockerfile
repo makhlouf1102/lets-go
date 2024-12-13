@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     gcc \
     g++ \
-    git
+    git \
+    curl
 
 # Install Go (Golang)
 ENV GOLANG_VERSION=1.20
@@ -16,5 +17,5 @@ RUN curl -fsSL https://golang.org/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz | ta
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/go"
 
-# Verify installation
+# Verify Go installation
 RUN go version
