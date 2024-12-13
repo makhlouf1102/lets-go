@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -30,7 +31,7 @@ func NewDockerFile(path string) (*DockerFile, error) {
 	defer tw.Close()
 
 	header := &tar.Header{
-		Name: "common-base.DockerFile",
+		Name: "DockerFile",
 		Mode: 0600,
 		Size: int64(len(fileContent)),
 	}
@@ -60,8 +61,9 @@ func (df *DockerFile) BuildImage() (*DockerImage, error) {
 
 	defer cli.Close()
 
+	fmt.Println("building the imagge")
 	builder, err := cli.ImageBuild(ctx, df.TarContent, types.ImageBuildOptions{
-		Dockerfile:     "common-base.DockerFile", // Specify the name here
+		Dockerfile: "DockerFile",
 	})
 	if err != nil {
 		fmt.Println("Problem while creating the docker builder")
@@ -70,25 +72,40 @@ func (df *DockerFile) BuildImage() (*DockerImage, error) {
 
 	defer builder.Body.Close()
 
+	// Parse the build logs to extract the image ID
+	var builtImageID string
 	scanner := bufio.NewScanner(builder.Body)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+		line := scanner.Text()
+		fmt.Println(line) // Log the build output for debugging
+
+		var logEntry struct {
+			Aux struct {
+				ID string `json:"ID"`
+			} `json:"aux"`
+		}
+		if err := json.Unmarshal([]byte(line), &logEntry); err == nil && logEntry.Aux.ID != "" {
+			builtImageID = logEntry.Aux.ID
+		}
 	}
+
 	if err := scanner.Err(); err != nil {
 		fmt.Printf("Error reading build output: %v\n", err)
 		return nil, err
 	}
 
-	// Return a placeholder DockerImage for now
-	return &DockerImage{}, nil
+	if builtImageID == "" {
+		fmt.Println("Could not find built image ID in the build logs")
+		return nil, fmt.Errorf("failed to extract image ID from build output")
+	}
 
-	// var builtImage types.ImageInspect
-	// if err := json.NewDecoder(builder.Body).Decode(&builtImage); err != nil {
-	// 	fmt.Println("Problem while decoding the body")
-	// 	return nil, err
-	// }
+	imageInspect, _, err := cli.ImageInspectWithRaw(ctx, builtImageID)
+	if err != nil {
+		fmt.Printf("Error inspecting built image: %v\n", err)
+		return nil, err
+	}
 
-	// return NewDockerImage(df, &builtImage)
+	return NewDockerImage(df, &imageInspect), nil
 }
 
 type DockerImage struct {
@@ -97,10 +114,10 @@ type DockerImage struct {
 	DockerImageRef *types.ImageInspect
 }
 
-func NewDockerImage(dockerFileRef *DockerFile, dockerImageRef *types.ImageInspect) (*DockerImage, error) {
+func NewDockerImage(dockerFileRef *DockerFile, dockerImageRef *types.ImageInspect) *DockerImage {
 	return &DockerImage{
 		ImageID:        dockerImageRef.ID,
 		DockerFileRef:  dockerFileRef,
 		DockerImageRef: dockerImageRef,
-	}, nil
+	}
 }

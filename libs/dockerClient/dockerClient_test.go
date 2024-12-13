@@ -7,7 +7,7 @@ import (
 
 func TestBuildImage(t *testing.T) {
 
-	dockerFile, err := dockerclient.NewDockerFile("../../docker/shared/common-base.Dockerfile")
+	dockerFile, err := dockerclient.NewDockerFile("../../docker/shared/Dockerfile")
 	if err != nil {
 		t.Fatalf("Failed to set the docker file struct : %v", err)
 	}
@@ -17,5 +17,10 @@ func TestBuildImage(t *testing.T) {
 		t.Fatalf("Failed while building the docker image : %v", err)
 	}
 
-	t.Fatal(dockerImage)
+	if len(dockerImage.DockerImageRef.Created) == 0 {
+		t.Fatalf("The object is empty")
+	}
+
+	t.Logf("created image with ID : %s and the docker version is : %s", dockerImage.ImageID, dockerImage.DockerImageRef.DockerVersion)
+
 }
