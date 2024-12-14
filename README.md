@@ -14,7 +14,7 @@ sh ./test.sh
 sh ./run.sh
 ```
 
-# Problems that I face and witch i think would make my code better and easier to run 
+# Problems that I face and witch i think would make my code better and easier to run And I have to create issues for each one
 
 ## I hate mocking ... 
 - I want to test my routes but how to test it without mocking I have to find a way to do it lol (12/10/2024 10:14PM)
