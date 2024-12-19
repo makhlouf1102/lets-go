@@ -50,7 +50,7 @@ func NewDockerFile(path string) (*DockerFile, error) {
 	}, nil
 }
 
-func (df *DockerFile) BuildImage() (*DockerImage, error) {
+func (df *DockerFile) BuildImage(imageName string) (*DockerImage, error) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
@@ -63,6 +63,7 @@ func (df *DockerFile) BuildImage() (*DockerImage, error) {
 
 	fmt.Println("building the imagge")
 	builder, err := cli.ImageBuild(ctx, df.TarContent, types.ImageBuildOptions{
+		Tags:       []string{imageName},
 		Dockerfile: "DockerFile",
 	})
 	if err != nil {

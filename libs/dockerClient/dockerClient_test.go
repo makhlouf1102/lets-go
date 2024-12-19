@@ -12,7 +12,7 @@ func TestBuildImage(t *testing.T) {
 		t.Fatalf("Failed to set the docker file struct : %v", err)
 	}
 
-	dockerImage, err := dockerFile.BuildImage()
+	dockerImage, err := dockerFile.BuildImage("test")
 	if err != nil {
 		t.Fatalf("Failed while building the docker image : %v", err)
 	}
