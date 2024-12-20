@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .  # Points to the current directory
+      dockerfile: Dockerfile  # Uses your Dockerfile
+    volumes:
+      - .:/app  # Mounts the current folder into /app inside the container
+    ports:
+      - "8080:8080"  # Maps port 8080 from the container to the host
+    working_dir: /app  # Sets the working directory
+    command: air  # Runs Air for hot reloading
