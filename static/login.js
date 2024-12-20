@@ -1,3 +1,4 @@
+import { ACCESS_TOKEN_NAME } from "./constants.js";
 import { proxyApiService } from "./ProxyApiService.js";
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -8,11 +9,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
     proxyApiService.login(email, password)
         .then((data)=> {
-            window.sessionStorage.setItem('accessToken', data.accessToken);
+            window.sessionStorage.setItem(ACCESS_TOKEN_NAME, data.accessToken);
             window.location.href = '/';
         })
         .catch((error) => {
             console.error('Error:', error);
-            alert(error);
         })
 });

@@ -164,12 +164,24 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie := http.Cookie{
+	cookieMaxAge := 3600 * 24 * 7
+
+	refreshCookie := http.Cookie{
 		Name:     env.Get("REFRESH_HTTP_COOKIE_NAME"),
 		Value:    refreshToken,
 		Path:     "/",
-		MaxAge:   3600 * 24 * 7,
+		MaxAge:   cookieMaxAge,
 		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	isAuthCookie := http.Cookie{
+		Name:     "has-refresh-token",
+		Value:    "true",
+		Path:     "/",
+		MaxAge:   cookieMaxAge,
+		HttpOnly: false,
 		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	}
@@ -180,7 +192,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		AccessToken: accessToken,
 		Data:        user,
 	}
-	http.SetCookie(w, &cookie)
+	http.SetCookie(w, &refreshCookie)
+	http.SetCookie(w, &isAuthCookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 

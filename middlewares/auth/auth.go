@@ -127,15 +127,29 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.SetCookie(w, &http.Cookie{
+		newRefreshCookie := http.Cookie{
 			Name:     env.Get("REFRESH_HTTP_COOKIE_NAME"),
 			Value:    newRefreshToken,
 			Path:     "/",
-			MaxAge:   3600 * 24 * 7,
+			MaxAge:   refreshCookie.MaxAge,
 			HttpOnly: true,
 			Secure:   false,
 			SameSite: http.SameSiteLaxMode,
-		})
+		}
+
+		isAuthCookie := http.Cookie{
+			Name:     "has-refresh-token",
+			Value:    "true",
+			Path:     "/",
+			MaxAge:   refreshCookie.MaxAge,
+			HttpOnly: false,
+			Secure:   false,
+			SameSite: http.SameSiteLaxMode,
+		}
+
+		http.SetCookie(w, &newRefreshCookie)
+		http.SetCookie(w, &isAuthCookie)
+
 	}
 
 	newAccessToken, err := token.CreateAccessToken(userId, userRoles)
