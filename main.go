@@ -27,6 +27,7 @@ func main() {
 	mux.HandleFunc("/", views.IndexPage)
 	mux.HandleFunc("/login", views.LoginPage)
 	mux.HandleFunc("/register", views.RegisterPage)
+	mux.HandleFunc("/problems", views.ProblemsPage)
 	mux.Handle("POST /api/v1/auth/register", http.HandlerFunc(auth.Register))
 	mux.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
 	mux.Handle("GET /api/v1/ping", http.HandlerFunc(ping))

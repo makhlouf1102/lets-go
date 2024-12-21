@@ -11,26 +11,22 @@ type Problem struct {
 	Difficulty  string `json:"difficulty"`
 }
 
-type ProblemList struct {
-	Problems []Problem `json:"problems"`
-}
-
-func GetAllProblems() ([]ProblemList, error) {
+func GetAllProblems() ([]Problem, error) {
 	rows, err := database.DB.Query("SELECT * FROM problem")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var problemLists []ProblemList
+	var problemList []Problem
 	for rows.Next() {
 		var problem Problem
 		err := rows.Scan(&problem.ID, &problem.Title, &problem.Description, &problem.Difficulty)
 		if err != nil {
 			return nil, err
 		}
-		problemLists = append(problemLists, ProblemList{Problems: []Problem{problem}})
+		problemList = append(problemList, problem)
 	}
-	return problemLists, nil
+	return problemList, nil
 }
 
 func GetProblem(id string) (*Problem, error) {

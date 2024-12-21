@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {{template "style"}}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problems</title>
+
+    <style>
+        table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        table th {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    {{template "header"}}
+    <sl-card style="padding: 1rem;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding: 0.5rem; border-bottom: 2px solid #ddd;">ID</th>
+                    <th style="text-align: left; padding: 0.5rem; border-bottom: 2px solid #ddd;">Title</th>
+                    <th style="text-align: left; padding: 0.5rem; border-bottom: 2px solid #ddd;">Difficulty</th>
+                    <th style="text-align: left; padding: 0.5rem; border-bottom: 2px solid #ddd;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .}}
+                <tr>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">{{.ID}}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">{{.Title}}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">{{.Difficulty}}</td>
+                    <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                        <sl-button href="/problems/{{.ID}}" size="small" variant="primary">View</sl-button>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </sl-card>
+    {{template "footer"}}
+</body>
+
+</html>
