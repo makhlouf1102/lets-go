@@ -1,3 +1,3 @@
 const token = sessionStorage.getItem("accessToken")
 
-if (!token) window.location.href = "/"
+if (!token) window.location.href = "/login"

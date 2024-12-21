@@ -37,7 +37,7 @@
                     <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">{{.Title}}</td>
                     <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">{{.Difficulty}}</td>
                     <td style="padding: 0.5rem; border-bottom: 1px solid #eee;">
-                        <sl-button href="/problems/{{.ID}}" size="small" variant="primary">View</sl-button>
+                        <sl-button href="/solve-problem/{{.ID}}" size="small" variant="primary">View</sl-button>
                     </td>
                 </tr>
                 {{end}}
@@ -45,6 +45,7 @@
         </table>
     </sl-card>
     {{template "footer"}}
+    <script type="module" src="/static/AuthRenderHTMLManager.js"></script>
 </body>
 
 </html>

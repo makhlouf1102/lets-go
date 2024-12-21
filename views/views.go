@@ -20,6 +20,7 @@ var tmpl, err = template.ParseFiles(
 	filepath.Join(viewsDir, "register.html"),
 	filepath.Join(viewsDir, "style.html"),
 	filepath.Join(viewsDir, "problems.html"),
+	filepath.Join(viewsDir, "solve-problem.html"),
 )
 
 func IndexPage(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +42,17 @@ func ProblemsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RenderStaticPage(w, r, "problems.html", problems)
+
+}
+
+func SolveProblemsPage(w http.ResponseWriter, r *http.Request) {
+	problemID := r.PathValue("problemID")
+	problem, err := problem_model.GetProblem(problemID)
+	if err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+	}
+
+	RenderStaticPage(w, r, "solve-problem.html", problem)
 
 }
 
