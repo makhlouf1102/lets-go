@@ -3,6 +3,8 @@ package dockerclient_test
 import (
 	dockerclient "lets-go/libs/dockerClient"
 	"testing"
+
+	"github.com/docker/docker/api/types"
 )
 
 func TestBuildImage(t *testing.T) {
@@ -12,7 +14,10 @@ func TestBuildImage(t *testing.T) {
 		t.Fatalf("Failed to set the docker file struct : %v", err)
 	}
 
-	dockerImage, err := dockerFile.BuildImage("test")
+	dockerImage, err := dockerFile.BuildImage(types.ImageBuildOptions{
+		Tags:       []string{"test"},
+		Dockerfile: "DockerFile",
+	})
 	if err != nil {
 		t.Fatalf("Failed while building the docker image : %v", err)
 	}

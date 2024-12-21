@@ -50,7 +50,7 @@ func NewDockerFile(path string) (*DockerFile, error) {
 	}, nil
 }
 
-func (df *DockerFile) BuildImage(imageName string) (*DockerImage, error) {
+func (df *DockerFile) BuildImage(imageBuildOptions types.ImageBuildOptions) (*DockerImage, error) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
@@ -62,10 +62,7 @@ func (df *DockerFile) BuildImage(imageName string) (*DockerImage, error) {
 	defer cli.Close()
 
 	fmt.Println("building the imagge")
-	builder, err := cli.ImageBuild(ctx, df.TarContent, types.ImageBuildOptions{
-		Tags:       []string{imageName},
-		Dockerfile: "DockerFile",
-	})
+	builder, err := cli.ImageBuild(ctx, df.TarContent, imageBuildOptions)
 	if err != nil {
 		fmt.Println("Problem while creating the docker builder")
 		return nil, err
@@ -106,19 +103,11 @@ func (df *DockerFile) BuildImage(imageName string) (*DockerImage, error) {
 		return nil, err
 	}
 
-	return NewDockerImage(df, &imageInspect), nil
-}
+	dockerImage, err := NewDockerImage(df, &imageInspect)
 
-type DockerImage struct {
-	ImageID        string
-	DockerFileRef  *DockerFile
-	DockerImageRef *types.ImageInspect
-}
-
-func NewDockerImage(dockerFileRef *DockerFile, dockerImageRef *types.ImageInspect) *DockerImage {
-	return &DockerImage{
-		ImageID:        dockerImageRef.ID,
-		DockerFileRef:  dockerFileRef,
-		DockerImageRef: dockerImageRef,
+	if err != nil {
+		fmt.Printf("Error while creating an instance of a docker image: %v\n", err)
+		return nil, err
 	}
+	return dockerImage, nil
 }
