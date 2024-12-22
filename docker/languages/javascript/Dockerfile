@@ -1,0 +1,2 @@
+FROM common-base
+

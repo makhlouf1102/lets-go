@@ -16,7 +16,7 @@ CREATE TABLE user_role (
     user_id CHAR(36) NOT NULL,
     role_id CHAR(36) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (role_id) REFERENCES role(role_id)
+    FOREIGN KEY (role_id) REFERENCES role(name)
 );
 
 CREATE TABLE language (

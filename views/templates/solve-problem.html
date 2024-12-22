@@ -23,6 +23,7 @@
             display: flex;
             flex-direction: row;
             padding: 2rem;
+            gap: 2rem;
         }
 
         #problem {
@@ -30,24 +31,24 @@
             padding: 1.5rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-right: 2rem;
             width: 40%;
         }
 
         #problem h1 {
             margin-top: 0;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             color: #333;
         }
 
-        #problem span {
+        #problem sl-tag {
+            margin-top: 1rem;
             display: inline-block;
-            padding: 0.25rem 0.5rem;
-            margin-top: 0.5rem;
-            background-color: #e3f2fd;
-            color: #2196f3;
-            border-radius: 4px;
-            font-size: 0.875rem;
+        }
+
+        #problem p {
+            margin-top: 1.5rem;
+            color: #555;
+            line-height: 1.6;
         }
 
         #editor-container {
@@ -55,11 +56,47 @@
             background-color: #282c34;
             border-radius: 8px;
             overflow: hidden;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         #editor {
             width: 100%;
-            height: 100%;
+            height: calc(100vh - 400px);
+            border-radius: 4px;
+        }
+
+        #terminal-container {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 1rem;
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        sl-select {
+            margin-bottom: 1rem;
+            display: block;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        #editor-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        #submit-button {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 1rem;
+            align-self: center;
         }
     </style>
     <script>
@@ -91,13 +128,25 @@
     <main>
         <div id="problem">
             <h1>{{.Title}}</h1>
-            {{if eq .Difficulty "Easy"}}<sl-tag variant="success">Easy</sl-tag>{{else if eq .Difficulty
-            "Medium"}}<sl-tag variant="warning">Medium</sl-tag>{{else}}<sl-tag variant="danger">Hard</sl-tag>{{end}}
+            {{if eq .Difficulty "Easy"}}<sl-tag variant="success">Easy</sl-tag>{{else if eq .Difficulty "Medium"}}<sl-tag variant="warning">Medium</sl-tag>{{else}}<sl-tag variant="danger">Hard</sl-tag>{{end}}
             <p>{{.Description}}</p>
         </div>
 
-        <div id="editor-container">
-            <div id="editor"></div>
+        <div id="editor-wrapper">
+            <div>
+                <sl-select value="javascript" label="Select a Language">
+                    <sl-option value="javascript">JavaScript</sl-option>
+                    <sl-option value="go">Go</sl-option>
+                    <sl-option value="python">Python</sl-option>
+                </sl-select>
+            </div>
+            <div id="editor-container">
+                <div id="editor"></div>
+            </div>
+            <div id="terminal-container">
+                <p>Terminal output will appear here...</p>
+            </div>
+            <sl-button id="submit-button" variant="primary">Submit</sl-button>
         </div>
     </main>
 

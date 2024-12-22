@@ -1,0 +1,49 @@
+package dockerclient
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
+)
+
+type DockerImage struct {
+	ImageID        string
+	DockerFileRef  *DockerFile
+	DockerImageRef *types.ImageInspect
+}
+
+func NewDockerImage(dockerFileRef *DockerFile, dockerImageRef *types.ImageInspect) (*DockerImage, error) {
+	return &DockerImage{
+		ImageID:        dockerImageRef.ID,
+		DockerFileRef:  dockerFileRef,
+		DockerImageRef: dockerImageRef,
+	}, nil
+}
+
+func (di *DockerImage) CreateContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (*DockerContainer, error) {
+	ctx := context.Background()
+	cli, err := GetDockerClient()
+
+	if err != nil {
+		fmt.Println("Problem while setting the client")
+		return nil, err
+	}
+
+	defer cli.Close()
+
+	creationResponse, err := cli.ContainerCreate(ctx, config, hostConfig, networkingConfig, nil, containerName)
+
+	if err != nil {
+		fmt.Println("problem while creating the container")
+		return nil, err
+	}
+
+	dockerContainer := &DockerContainer{
+		ContainerID: creationResponse.ID,
+	}
+
+	return dockerContainer, nil
+}
