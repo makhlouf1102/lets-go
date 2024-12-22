@@ -58,8 +58,6 @@ func (df *DockerFile) BuildImage(imageBuildOptions types.ImageBuildOptions) (*Do
 		return nil, err
 	}
 
-	defer cli.Close()
-
 	builder, err := cli.ImageBuild(ctx, df.TarContent, imageBuildOptions)
 	if err != nil {
 		fmt.Println("Problem while creating the docker builder")
