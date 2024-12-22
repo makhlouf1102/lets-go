@@ -6,19 +6,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>1102 Online Code Editor</title>
+</head>
+
 <body>
     {{template "header"}}
-    <main>
-        <sl-card>
-            <img slot="image" src="/public/test.gif" alt="Descriptive Alt Text">
-            <h1 slot="header">Start Coding with LeetCode Clone</h1>
-            <p>Enhance your skills with our challenges and become a coding master.</p>
-            <sl-button type="primary" href="/problems">Explore Problems</sl-button>
+    <main style="display: flex; justify-content: center; align-items: center; height: calc(100vh - 120px); background-color: #f5f7fa;">
+        <sl-card style="max-width: 500px; text-align: center;">
+            <img slot="image" src="/public/test.gif" alt="Descriptive Alt Text" style="max-height: 250px; object-fit: cover;">
+            <h1 slot="header" style="font-size: 1.5rem; margin: 0; color: #333;">Start Coding with LeetCode Clone</h1>
+            <p style="margin: 1rem 0; color: #555;">Enhance your skills with our challenges and become a coding master.</p>
+            <sl-button type="primary" href="/problems" style="--sl-button-font-size: 1rem;">Explore Problems</sl-button>
         </sl-card>
     </main>
     <script type="module" src="/static/index.js"></script>
     {{template "footer"}}
 </body>
-
 
 </html>

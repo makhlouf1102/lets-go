@@ -2,35 +2,29 @@
 <html lang="en">
 
 <head>
-  {{template "style"}}
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - CodeEdit</title>
+    {{template "style"}}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CodeEdit</title>
 </head>
 
 <body>
-  {{template "header"}}
-  <main>
-
-    <div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
-      <form id="loginForm">
-        <h2 style="text-align: center;">Login</h2>
-
-        <sl-input id="email" name="email" type="email" label="Email" placeholder="Enter your email" value="mak@mak.com"
-          required></sl-input>
-        <sl-input id="password" name="password" type="password" label="Password" placeholder="Enter your password"
-          value="1234" toggle-password required></sl-input>
-
-        <sl-button type="submit" variant="primary" style="width: 100%; margin-top: 20px;">Login</sl-button>
-        </sl-form>
-
-        <p style="text-align: center; margin-top: 20px;">
-          Don't have an account? <a href="#">Sign up</a>
-        </p>
-    </div>
-  </main>
-  <script type="module" src="/static/login.js"></script>
-  {{template "footer"}}
+    {{template "header"}}
+    <main style="display: flex; justify-content: center; align-items: center; height: calc(100vh - 120px); background-color: #f5f7fa;">
+        <div style="max-width: 400px; width: 100%; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 20px;">
+            <form id="loginForm" style="display: flex; flex-direction: column; gap: 2rem;">
+                <h2 style="text-align: center; margin-bottom: 20px; color: #333;">Login</h2>
+                <sl-input id="email" name="email" type="email" label="Email" placeholder="Enter your email" value="mak@mak.com" required></sl-input>
+                <sl-input id="password" name="password" type="password" label="Password" placeholder="Enter your password" value="1234" toggle-password required></sl-input>
+                <sl-button type="submit" variant="primary" style="width: 100%; margin-top: 20px;">Login</sl-button>
+            </form>
+            <p style="text-align: center; margin-top: 20px;">
+                Don't have an account? <a href="#" style="color: #007BFF; text-decoration: none;">Sign up</a>
+            </p>
+        </div>
+    </main>
+    <script type="module" src="/static/login.js"></script>
+    {{template "footer"}}
 </body>
 
 </html>

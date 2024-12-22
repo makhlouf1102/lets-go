@@ -1,73 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     {{template "style"}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - CodeEdit</title>
 </head>
+
 <body>
     {{template "header"}}
-    <main class="min-h-screen flex items-center justify-center bg-base-200">
-        <div class="card w-full max-w-md bg-base-100 shadow-xl p-6">
-            <h1 class="text-2xl font-bold text-center mb-6">Create Account</h1>
-            <form id="registerForm" class="space-y-4">
-                <div class="form-control">
-                    <label class="label" for="username">
-                        <span class="label-text">Username</span>
-                    </label>
-                    <input type="text" id="username" name="username" required 
-                           class="input input-bordered w-full">
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="email">
-                        <span class="label-text">Email</span>
-                    </label>
-                    <input type="email" id="email" name="email" required 
-                           class="input input-bordered w-full">
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="firstname">
-                        <span class="label-text">First Name</span>
-                    </label>
-                    <input type="text" id="firstname" name="firstname" required 
-                           class="input input-bordered w-full">
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="lastname">
-                        <span class="label-text">Last Name</span>
-                    </label>
-                    <input type="text" id="lastname" name="lastname" required 
-                           class="input input-bordered w-full">
-                </div>
-                
-                <div class="form-control">
-                    <label class="label" for="password">
-                        <span class="label-text">Password</span>
-                    </label>
-                    <input type="password" id="password" name="password" required 
-                           class="input input-bordered w-full">
-                </div>
-
-                <div class="form-control mt-6">
-                    <button type="submit" class="btn btn-primary w-full">Create Account</button>
-                </div>
+    <main
+        style="display: flex; justify-content: center; align-items: center; height: calc(100vh - 120px); background-color: #f5f7fa;">
+        <div
+            style="max-width: 400px; width: 100%; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 20px;">
+            <form id="registerForm" style="display: flex; flex-direction: column; gap: 2rem;">
+                <h2 style="text-align: center; margin-bottom: 20px; color: #333;">Create Account</h2>
+                <sl-input id="username" name="username" type="text" label="Username" placeholder="Enter your username"
+                    required></sl-input>
+                <sl-input id="email" name="email" type="email" label="Email" placeholder="Enter your email"
+                    required></sl-input>
+                <sl-input id="firstname" name="firstname" type="text" label="First Name"
+                    placeholder="Enter your first name" required></sl-input>
+                <sl-input id="lastname" name="lastname" type="text" label="Last Name" placeholder="Enter your last name"
+                    required></sl-input>
+                <sl-input id="password" name="password" type="password" label="Password"
+                    placeholder="Enter your password" toggle-password required></sl-input>
+                <sl-button type="submit" variant="primary" style="width: 100%; margin-top: 20px;">Create
+                    Account</sl-button>
             </form>
-            
-            <p class="text-center mt-4">
-                Already have an account? 
-                <a href="/login" class="link link-primary">Login here</a>
+            <p style="text-align: center; margin-top: 20px;">
+                Already have an account? <a href="/login" style="color: #007BFF; text-decoration: none;">Login here</a>
             </p>
         </div>
     </main>
-
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const formData = {
                 username: document.getElementById('username').value,
                 email: document.getElementById('email').value,
@@ -86,7 +56,7 @@
                 });
 
                 if (response.ok) {
-                    window.location.href = '/login'; // Redirect to login page on success
+                    window.location.href = '/login';
                 } else {
                     alert('Registration failed. Please try again.');
                 }
@@ -98,4 +68,5 @@
     </script>
     {{template "footer"}}
 </body>
+
 </html>

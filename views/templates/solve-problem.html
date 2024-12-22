@@ -7,6 +7,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js"></script>
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f7fa;
+        }
+
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: row;
+            padding: 2rem;
+        }
+
+        #problem {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-right: 2rem;
+            width: 40%;
+        }
+
+        #problem h1 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: #333;
+        }
+
+        #problem span {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            margin-top: 0.5rem;
+            background-color: #e3f2fd;
+            color: #2196f3;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        #editor-container {
+            flex-grow: 1;
+            background-color: #282c34;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #editor {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
     <script>
         require.config({
             paths: {
@@ -21,8 +76,6 @@
                 value: sourceCode,
                 language: 'javascript',
                 automaticLayout: true,
-                // lineNumbers: 'off',
-                // minimap: { enabled: false },
                 padding: { top: 5, right: 5, bottom: 5, left: 5 },
                 overviewRulerLanes: 0,
                 overviewRulerBorder: false,
@@ -34,14 +87,20 @@
 
 <body>
     {{template "header"}}
-    <div>
-        <span>
+
+    <main>
+        <div id="problem">
             <h1>{{.Title}}</h1>
-            <span>{{.Difficulty}}</span>
+            {{if eq .Difficulty "Easy"}}<sl-tag variant="success">Easy</sl-tag>{{else if eq .Difficulty
+            "Medium"}}<sl-tag variant="warning">Medium</sl-tag>{{else}}<sl-tag variant="danger">Hard</sl-tag>{{end}}
             <p>{{.Description}}</p>
-        </span>
-        <div id="editor" style="width: 100%; height: 100vh"></div>
-    </div>
+        </div>
+
+        <div id="editor-container">
+            <div id="editor"></div>
+        </div>
+    </main>
+
     {{template "footer"}}
 </body>
 
