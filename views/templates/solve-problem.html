@@ -99,27 +99,8 @@
             align-self: center;
         }
     </style>
-    <script>
-        require.config({
-            paths: {
-                vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs',
-            },
-        });
-
-        const sourceCode = `console.log('Hello Monaco Editor!');`;
-
-        require(['vs/editor/editor.main'], () => {
-            monaco.editor.create(document.getElementById('editor'), {
-                value: sourceCode,
-                language: 'javascript',
-                automaticLayout: true,
-                padding: { top: 5, right: 5, bottom: 5, left: 5 },
-                overviewRulerLanes: 0,
-                overviewRulerBorder: false,
-                theme: 'vs-dark',
-            });
-        });
-    </script>
+    <script type="module" src="/static/solve-problem.js"></script>
+        
 </head>
 
 <body>

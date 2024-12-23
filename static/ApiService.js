@@ -33,5 +33,9 @@ export const apiService = {
         };
 
         return await this.request("/auth/login", options);
+    },
+
+    async getProblemCode(programmingLanguage, problemId) {
+        return await this.request(`/problem/${programmingLanguage}/${problemId}`)
     }
 }

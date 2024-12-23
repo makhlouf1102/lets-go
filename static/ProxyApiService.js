@@ -2,9 +2,8 @@ import { catchError } from './catchError.js';
 import { JSON_ERROR, SERVER_ERROR, BAD_CREDENTIALS_ERROR, INVALID_AUTH_ERROR, NEW_TOKEN_ERROR } from './errorsConst.js';
 import { apiService } from './ApiService.js';
 
-
 export const proxyApiService = {
-    async protectedRoute(request) {
+    async protectedRouteJson(request) {
         if (typeof request !== "function") {
             throw new Error("The request parameter must be a function.");
         }
@@ -12,7 +11,7 @@ export const proxyApiService = {
         let [error, response] = await catchError(request());
 
         if (error) {
-            return [error, null]; 
+            return [error, null];
         }
 
         if (!response.ok && (response.status === 403 || response.status === 401)) {
@@ -32,7 +31,32 @@ export const proxyApiService = {
             return await catchError(request());
         }
 
-        return [null, response];
+        return [null, responseJson];
+    },
+
+    async protectedRouteText(request) {
+        if (typeof request !== "function") {
+            throw new Error("The request parameter must be a function.");
+        }
+
+        let [error, response] = await catchError(request());
+
+        if (error) {
+            return [error, null];
+        }
+
+        if (!response.ok && (response.status === 403 || response.status === 401)) {
+            window.sessionStorage.removeItem("accessToken");
+            return [new Error(INVALID_AUTH_ERROR), null];
+        }
+
+        let [errorText, responseText] = await catchError(response.text());
+
+        if (errorText) {
+            return [new Error("Failed to parse text response"), null];
+        }
+
+        return [null, responseText];
     },
 
     async login(email, password) {
@@ -46,8 +70,8 @@ export const proxyApiService = {
             if (responseStatus == "400" || responseStatus == "500")
                 throw Error(SERVER_ERROR)
 
-            if (responseStatus == "401") throw Error()
-            throw Error(BAD_CREDENTIALS_ERROR)
+            if (responseStatus == "401")
+                throw Error(BAD_CREDENTIALS_ERROR)
         }
 
         let [errorJson, responseJson] = await catchError(response.json())
@@ -70,17 +94,18 @@ export const proxyApiService = {
     },
 
     async pingProtected() {
-        let [error, response] = await this.protectedRoute(() => apiService.pingProtected());
+        let [error, response] = await this.protectedRouteJson(() => apiService.pingProtected());
 
-        if (error) {
-            throw new Error(SERVER_ERROR);
-        }
+        if (error) throw new Error(SERVER_ERROR);
 
-        if (!response.ok) {
-            throw new Error(response.status);
-        }
+        return response;
+    },
 
-        return true;
+    async getProblemCode(programmingLanguage, problemId) {
+        let [error, response] = await this.protectedRouteText(() => apiService.getProblemCode(programmingLanguage, problemId))
+        
+        if (error) throw new Error(SERVER_ERROR);
+
+        return response;
     }
-
 }

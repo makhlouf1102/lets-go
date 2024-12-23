@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"lets-go/database"
 	"lets-go/handlers/auth"
+	"lets-go/handlers/problem"
 	"lets-go/libs/env"
 	auth_middleware "lets-go/middlewares/auth"
 	logger_middleware "lets-go/middlewares/logger"
@@ -32,6 +33,7 @@ func main() {
 	mux.Handle("POST /api/v1/auth/register", http.HandlerFunc(auth.Register))
 	mux.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
 	mux.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
+	mux.Handle("GET /api/v1/problem/{programmingLanguage}/{problemID}", http.HandlerFunc(problem.GetProblemCode))
 	mux.Handle("GET /api/v1/ping-protected", auth_middleware.NewTokenRefresher(http.HandlerFunc(ping)))
 
 	wrapperMux := logger_middleware.NewLogger(mux)
