@@ -2,6 +2,8 @@ package problem
 
 import (
 	"fmt"
+	dockerclient "lets-go/libs/dockerClient"
+	"log"
 	"net/http"
 	"os"
 )
@@ -29,4 +31,15 @@ func GetProblemCode(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	w.Write(fileContent)
+}
+
+func RunCode(w http.ResponseWriter, r *http.Request) {
+	programmingLanguage := r.PathValue("programmingLanguage")
+
+	if len(programmingLanguage) < 0 {
+		log.Println("Error while trying to get the programming language")
+		http.Error(w, "server error", http.StatusInternalServerError)
+	}
+
+	// runningContainer, err := docker
 }

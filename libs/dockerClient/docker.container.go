@@ -13,11 +13,33 @@ type DockerContainer struct {
 	IsRunning   bool
 }
 
-func NewDockerContainer(id string) (*DockerContainer, error) {
-	return &DockerContainer{
+type ContainersMap struct {
+	entities map[string]DockerContainer
+}
+
+func (cm *ContainersMap) AddContainer(programmingLanguage ProgrammingLanguage, container *DockerContainer) error {
+	cm.entities[programmingLanguage.Name] = *container
+
+	return nil
+}
+
+type ProgrammingLanguage struct {
+	Name string
+}
+
+var publicContainers *ContainersMap = &ContainersMap{
+	entities: make(map[string]DockerContainer),
+}
+
+func NewDockerContainer(id string, programmingLanguage ProgrammingLanguage) (*DockerContainer, error) {
+	dc := &DockerContainer{
 		ContainerID: id,
 		IsRunning:   false,
-	}, nil
+	}
+
+	publicContainers.AddContainer(programmingLanguage, dc)
+
+	return dc, nil
 }
 
 func (dc *DockerContainer) Run(options container.StartOptions) error {

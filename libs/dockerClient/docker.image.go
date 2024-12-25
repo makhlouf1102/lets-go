@@ -23,7 +23,7 @@ func NewDockerImage(dockerFileRef *DockerFile, dockerImageRef *types.ImageInspec
 	}, nil
 }
 
-func (di *DockerImage) CreateContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (*DockerContainer, error) {
+func (di *DockerImage) CreateContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string, programmingLanguage ProgrammingLanguage) (*DockerContainer, error) {
 	ctx := context.Background()
 	cli, err := GetDockerClient()
 
@@ -39,7 +39,7 @@ func (di *DockerImage) CreateContainer(config *container.Config, hostConfig *con
 		return nil, err
 	}
 
-	dockerContainer, err := NewDockerContainer(creationResponse.ID)
+	dockerContainer, err := NewDockerContainer(creationResponse.ID, programmingLanguage)
 
 	if err != nil {
 		fmt.Println("problem while creating instanciating the container")
