@@ -41,3 +41,5 @@ CREATE TABLE solved_problem (
     FOREIGN KEY (problem_id) REFERENCES problem(problem_id),
     FOREIGN KEY (language_id) REFERENCES language(language_id)
 );
+
+CREATE TABLE 

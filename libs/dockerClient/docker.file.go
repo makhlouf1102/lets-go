@@ -5,9 +5,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/docker/docker/api/types"
@@ -71,20 +71,11 @@ func (df *DockerFile) BuildImage(imageBuildOptions types.ImageBuildOptions) (*Do
 	scanner := bufio.NewScanner(builder.Body)
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line) // Log the build output for debugging
-
-		var logEntry struct {
-			Aux struct {
-				ID string `json:"ID"`
-			} `json:"aux"`
-		}
-		if err := json.Unmarshal([]byte(line), &logEntry); err == nil && logEntry.Aux.ID != "" {
-			builtImageID = logEntry.Aux.ID
-		}
+		log.Println(line) // Log the build output for debugging
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Printf("Error reading build output: %v\n", err)
+		log.Printf("Error reading build output: %v\n", err)
 		return nil, err
 	}
 
