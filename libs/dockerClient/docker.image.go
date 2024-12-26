@@ -3,6 +3,7 @@ package dockerclient
 import (
 	"context"
 	"fmt"
+	localTypes "lets-go/types"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -23,7 +24,7 @@ func NewDockerImage(dockerFileRef *DockerFile, dockerImageRef *types.ImageInspec
 	}, nil
 }
 
-func (di *DockerImage) CreateContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string, programmingLanguage ProgrammingLanguage) (*DockerContainer, error) {
+func (di *DockerImage) CreateContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string, programmingLanguage localTypes.ProgrammingLanguage) (*DockerContainer, error) {
 	ctx := context.Background()
 	cli, err := GetDockerClient()
 

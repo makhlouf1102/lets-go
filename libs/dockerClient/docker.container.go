@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	localTypes "lets-go/types"
 
 	"github.com/docker/docker/api/types/container"
 )
@@ -17,21 +18,17 @@ type ContainersMap struct {
 	entities map[string]DockerContainer
 }
 
-func (cm *ContainersMap) AddContainer(programmingLanguage ProgrammingLanguage, container *DockerContainer) error {
+func (cm *ContainersMap) AddContainer(programmingLanguage localTypes.ProgrammingLanguage, container *DockerContainer) error {
 	cm.entities[programmingLanguage.Name] = *container
 
 	return nil
-}
-
-type ProgrammingLanguage struct {
-	Name string
 }
 
 var publicContainers *ContainersMap = &ContainersMap{
 	entities: make(map[string]DockerContainer),
 }
 
-func NewDockerContainer(id string, programmingLanguage ProgrammingLanguage) (*DockerContainer, error) {
+func NewDockerContainer(id string, programmingLanguage localTypes.ProgrammingLanguage) (*DockerContainer, error) {
 	dc := &DockerContainer{
 		ContainerID: id,
 		IsRunning:   false,

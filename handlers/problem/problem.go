@@ -2,7 +2,8 @@ package problem
 
 import (
 	"fmt"
-	dockerclient "lets-go/libs/dockerClient"
+	"lets-go/libs/dockerController"
+	localTypes "lets-go/types"
 	"log"
 	"net/http"
 	"os"
@@ -34,12 +35,30 @@ func GetProblemCode(w http.ResponseWriter, r *http.Request) {
 }
 
 func RunCode(w http.ResponseWriter, r *http.Request) {
-	programmingLanguage := r.PathValue("programmingLanguage")
+	programmingLanguageParam := r.PathValue("programmingLanguage")
 
-	if len(programmingLanguage) < 0 {
+	if len(programmingLanguageParam) < 0 {
 		log.Println("Error while trying to get the programming language")
 		http.Error(w, "server error", http.StatusInternalServerError)
 	}
 
-	// runningContainer, err := docker
+	runningContainers, err := dockerController.GetContainersMap()
+
+	if err != nil {
+		log.Println("Error while trying to get the docker controller")
+		http.Error(w, "server error", http.StatusInternalServerError)
+	}
+
+	programmingLanguage := localTypes.ProgrammingLanguage{
+		Name: programmingLanguageParam,
+	}
+
+	container, err := runningContainers.Get(programmingLanguage)
+
+	if err != nil {
+		log.Println("Error while trying to get the docker container")
+		http.Error(w, "server error", http.StatusInternalServerError)
+	}
+
+	
 }
