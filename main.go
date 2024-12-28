@@ -5,6 +5,7 @@ import (
 	"lets-go/database"
 	"lets-go/handlers/auth"
 	"lets-go/handlers/problem"
+	"lets-go/libs/dockerController"
 	"lets-go/libs/env"
 	auth_middleware "lets-go/middlewares/auth"
 	logger_middleware "lets-go/middlewares/logger"
@@ -15,6 +16,10 @@ import (
 
 func main() {
 	env.Load()
+
+	if err := dockerController.InitContainers(); err != nil {
+		log.Fatalf("Failed to run the containers database: %v", err)
+	}
 
 	if err := database.InitializeDB("./database/database.db"); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -35,6 +40,7 @@ func main() {
 	mux.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
 	mux.Handle("GET /api/v1/problem/{programmingLanguage}/{problemID}", http.HandlerFunc(problem.GetProblemCode))
 	mux.Handle("GET /api/v1/ping-protected", auth_middleware.NewTokenRefresher(http.HandlerFunc(ping)))
+	mux.Handle("POST /api/v1/problem/runcode", auth_middleware.NewTokenRefresher(http.HandlerFunc(problem.RunCode)))
 
 	wrapperMux := logger_middleware.NewLogger(mux)
 

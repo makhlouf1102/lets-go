@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	localTypes "lets-go/types"
 
 	"github.com/docker/docker/api/types/container"
 )
@@ -14,27 +13,11 @@ type DockerContainer struct {
 	IsRunning   bool
 }
 
-type ContainersMap struct {
-	entities map[string]DockerContainer
-}
-
-func (cm *ContainersMap) AddContainer(programmingLanguage localTypes.ProgrammingLanguage, container *DockerContainer) error {
-	cm.entities[programmingLanguage.Name] = *container
-
-	return nil
-}
-
-var publicContainers *ContainersMap = &ContainersMap{
-	entities: make(map[string]DockerContainer),
-}
-
-func NewDockerContainer(id string, programmingLanguage localTypes.ProgrammingLanguage) (*DockerContainer, error) {
+func NewDockerContainer(id string) (*DockerContainer, error) {
 	dc := &DockerContainer{
 		ContainerID: id,
 		IsRunning:   false,
 	}
-
-	publicContainers.AddContainer(programmingLanguage, dc)
 
 	return dc, nil
 }
@@ -53,7 +36,7 @@ func (dc *DockerContainer) Run(options container.StartOptions) error {
 		return err
 	}
 
-	dc.IsRunning = false
+	dc.IsRunning = true
 
 	return nil
 }

@@ -6,6 +6,10 @@ import (
 	localTypes "lets-go/types"
 	"log"
 	"sync"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 )
 
 type ContainersMap struct {
@@ -40,4 +44,55 @@ func GetContainersMap() (*ContainersMap, error) {
 	})
 
 	return publicContainers, nil
+}
+
+func InitContainers() error {
+	dockerFile, err := dockerclient.NewDockerFile("./docker/shared/DockerFile")
+
+	if err != nil {
+		return err
+	}
+
+	dockerImage, err := dockerFile.BuildImage(types.ImageBuildOptions{
+		Tags:       []string{"js-letsgo-image"},
+		Dockerfile: "DockerFile",
+	})
+
+	if err != nil {
+		return err
+	}
+
+	hostConfig := &container.HostConfig{}
+
+	// Empty `network.NetworkingConfig`
+	networkingConfig := &network.NetworkingConfig{}
+
+	containerName := "js-letsgo-container"
+
+	config := &container.Config{}
+
+	programmingLanguage := localTypes.ProgrammingLanguage{Name: "javascript"}
+
+	dockerContainer, err := dockerImage.CreateContainer(config, hostConfig, networkingConfig, containerName, programmingLanguage)
+
+	if err != nil {
+		return err
+	}
+
+	pc, err := GetContainersMap()
+
+	if err != nil {
+		return err
+	}
+
+	if err := pc.AddContainer(programmingLanguage, dockerContainer); err != nil {
+		return err
+	}
+
+	if err := dockerContainer.Run(container.StartOptions{}); err != nil {
+		return err
+	}
+
+	return nil
+
 }

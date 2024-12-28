@@ -1,12 +1,16 @@
 package problem
 
 import (
+	"encoding/json"
 	"fmt"
 	"lets-go/libs/dockerController"
 	localTypes "lets-go/types"
 	"log"
 	"net/http"
 	"os"
+	"strings"
+
+	"github.com/docker/docker/api/types/container"
 )
 
 func GetProblemCode(w http.ResponseWriter, r *http.Request) {
@@ -34,12 +38,19 @@ func GetProblemCode(w http.ResponseWriter, r *http.Request) {
 	w.Write(fileContent)
 }
 
-func RunCode(w http.ResponseWriter, r *http.Request) {
-	programmingLanguageParam := r.PathValue("programmingLanguage")
+type RunCodeRequstData struct {
+	programmingLanguage string `json:"programmingLanguage"`
+	code                string `json:"code"`
+}
 
-	if len(programmingLanguageParam) < 0 {
-		log.Println("Error while trying to get the programming language")
-		http.Error(w, "server error", http.StatusInternalServerError)
+func RunCode(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	var dataObj RunCodeRequstData
+
+	if err := json.NewDecoder(r.Body).Decode(&dataObj); err != nil {
+		http.Error(w, "invalid Json format", http.StatusBadRequest)
+		return
 	}
 
 	runningContainers, err := dockerController.GetContainersMap()
@@ -50,15 +61,34 @@ func RunCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	programmingLanguage := localTypes.ProgrammingLanguage{
-		Name: programmingLanguageParam,
+		Name: dataObj.programmingLanguage,
 	}
 
-	container, err := runningContainers.Get(programmingLanguage)
+	localContainer, err := runningContainers.Get(programmingLanguage)
 
 	if err != nil {
 		log.Println("Error while trying to get the docker container")
 		http.Error(w, "server error", http.StatusInternalServerError)
 	}
 
-	
+	formatedCode := fmt.Sprintf("\"%s\"", dataObj.code)
+
+	execOptions := container.ExecOptions{
+		Cmd: []string{"node", "-e", formatedCode},
+	}
+
+	execAttachOptions := container.ExecAttachOptions{
+		Tty: true,
+	}
+
+	output, err := localContainer.ExecuteCommand(execOptions, execAttachOptions)
+
+	if err != nil {
+		log.Println("Error while trying to run code in the docker container")
+		http.Error(w, "server error", http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(strings.Join(output, "\n")))
 }
