@@ -74,12 +74,16 @@ func RunCode(w http.ResponseWriter, r *http.Request) {
 	// formatedCode := fmt.Sprintf("\"%s\"", dataObj.Code)
 
 	execOptions := container.ExecOptions{
-		Cmd: []string{"node", "-e", dataObj.Code},
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          []string{"node", "-e", dataObj.Code},
+		Tty:          true,
 	}
 
 	execAttachOptions := container.ExecAttachOptions{
-		Tty: true,
-		
+		Tty:    true,
+		Detach: false,
 	}
 
 	output, err := localContainer.ExecuteCommand(execOptions, execAttachOptions)
@@ -88,7 +92,6 @@ func RunCode(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error while trying to run code in the docker container")
 		http.Error(w, "server error", http.StatusInternalServerError)
 	}
-
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)

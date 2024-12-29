@@ -93,7 +93,7 @@ func (dc *DockerContainer) ExecuteCommand(execOptions container.ExecOptions, exe
 	execStart, err := cli.ContainerExecAttach(ctx, execID, execAttachOptions)
 
 	if err != nil {
-		fmt.Println("Problem while executing an execution command")
+		log.Printf("Problem while executing an execution command : %v", err)
 		return nil, err
 	}
 
