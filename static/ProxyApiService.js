@@ -107,5 +107,12 @@ export const proxyApiService = {
         if (error) throw new Error(SERVER_ERROR);
 
         return response;
-    }
+    },
+
+    async runCode(programmingLanguage, code) {
+        let [error, response] = await this.protectedRouteText(() => apiService.runCode(programmingLanguage, code))
+        if (error) throw new Error(SERVER_ERROR);
+
+        return response;
+    } 
 }

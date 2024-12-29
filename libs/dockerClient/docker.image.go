@@ -7,6 +7,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 )
 
@@ -35,14 +36,37 @@ func (di *DockerImage) CreateContainer(config *container.Config, hostConfig *con
 
 	config.Image = di.ImageID
 
-	creationResponse, err := cli.ContainerCreate(ctx, config, hostConfig, networkingConfig, nil, containerName)
+	filter := filters.NewArgs(
+		filters.Arg("name", containerName),
+	)
+
+	// check if the container exists
+	containerList, err := cli.ContainerList(ctx, container.ListOptions{
+		Filters: filter,
+		All:     true,
+	})
 
 	if err != nil {
-		fmt.Println("problem while creating the container")
 		return nil, err
 	}
 
-	dockerContainer, err := NewDockerContainer(creationResponse.ID)
+	var containerID string
+
+	if len(containerList) > 0 {
+		containerID = containerList[0].ID
+	} else {
+		creationResponse, err := cli.ContainerCreate(ctx, config, hostConfig, networkingConfig, nil, containerName)
+
+		if err != nil {
+			fmt.Println("problem while creating the container")
+			return nil, err
+		}
+
+		containerID = creationResponse.ID
+
+	}
+
+	dockerContainer, err := NewDockerContainer(containerID)
 
 	if err != nil {
 		fmt.Println("problem while creating instanciating the container")

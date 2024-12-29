@@ -15,15 +15,15 @@ export const apiService = {
 
         return await fetch(`${prefix}${endpoint}`, options);
     },
-    
+
     async ping() {
         return await this.request("/ping");
     },
-    
+
     async pingProtected() {
         return await this.request("/ping-protected");
     },
-    
+
     async login(email, password) {
         const formData = { email, password };
 
@@ -37,5 +37,17 @@ export const apiService = {
 
     async getProblemCode(programmingLanguage, problemId) {
         return await this.request(`/problem/${programmingLanguage}/${problemId}`)
+    },
+
+    async runCode(programmingLanguage, code) {
+
+        const data = { programmingLanguage, code }
+
+        const options = {
+            method: "POST",
+            body: JSON.stringify(data)
+        }
+
+        return await this.request(`/problem/runcode`, options)
     }
 }

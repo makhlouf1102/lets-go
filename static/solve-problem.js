@@ -20,7 +20,7 @@ proxyApiService.getProblemCode(currentProggramingLanguage, problemId)
 
 
 require(['vs/editor/editor.main'], () => {
-    monaco.editor.create(document.getElementById('editor'), {
+    window.editor = monaco.editor.create(document.getElementById('editor'), {
         value: sourceCode,
         language: currentProggramingLanguage,
         automaticLayout: true,
@@ -30,3 +30,16 @@ require(['vs/editor/editor.main'], () => {
         theme: 'vs-dark',
     });
 });
+
+document.getElementById("submit-button").addEventListener("click", async (e) => {
+    // get the code from monaco editor
+    var code = window.editor.getValue()
+
+    proxyApiService.runCode("js", code).then((data) => {
+        console.log(data)
+    })
+    .catch((error) => {
+        console.error("Error", error)
+    })
+})
+

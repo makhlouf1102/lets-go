@@ -3,6 +3,7 @@ package auth_middleware
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -46,12 +47,14 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			userId, ok := accessClaims["user_id"].(string)
 			if !ok {
+				fmt.Println("userId, ok := accessClaims[\"user_id\"].(string)")
 				http.Error(w, "invalid token claims", http.StatusForbidden)
 				return
 			}
 
 			userRoles, ok := accessClaims["user_roles"].([]string)
 			if !ok {
+				fmt.Println("userRoles, ok := accessClaims[\"user_roles\"].([]string)")
 				http.Error(w, "invalid token claims", http.StatusForbidden)
 				return
 			}
@@ -97,12 +100,15 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	userId, ok := refreshClaims["user_id"].(string)
 	if !ok {
+		fmt.Println("refreshClaims[\"user_id\"].(string)")
 		http.Error(w, "invalid token claims", http.StatusForbidden)
 		return
 	}
 
 	userRoles, ok := refreshClaims["user_roles"].([]string)
+	fmt.Println(userRoles)
 	if !ok {
+		fmt.Println("userRoles, ok := refreshClaims[\"user_roles\"].([]string)")
 		http.Error(w, "invalid token claims", http.StatusForbidden)
 		return
 	}

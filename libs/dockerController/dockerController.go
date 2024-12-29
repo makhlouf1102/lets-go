@@ -23,6 +23,10 @@ func (cm *ContainersMap) AddContainer(programmingLanguage localTypes.Programming
 }
 
 func (cm *ContainersMap) Get(programmingLanguage localTypes.ProgrammingLanguage) (*dockerclient.DockerContainer, error) {
+	if len(programmingLanguage.Name) < 1 {
+		log.Printf("programming language name is empty")
+		return nil, errors.New("programming language name is empty")
+	}
 	tagetedContainer, ok := cm.entities[programmingLanguage.Name]
 	if !ok {
 		log.Printf("the container for : %s does not exists", programmingLanguage.Name)
@@ -64,14 +68,16 @@ func InitContainers() error {
 
 	hostConfig := &container.HostConfig{}
 
-	// Empty `network.NetworkingConfig`
 	networkingConfig := &network.NetworkingConfig{}
 
 	containerName := "js-letsgo-container"
 
-	config := &container.Config{}
+	config := &container.Config{
+		Tty:   true,
+		Image: containerName,
+	}
 
-	programmingLanguage := localTypes.ProgrammingLanguage{Name: "javascript"}
+	programmingLanguage := localTypes.ProgrammingLanguage{Name: "js"}
 
 	dockerContainer, err := dockerImage.CreateContainer(config, hostConfig, networkingConfig, containerName, programmingLanguage)
 
