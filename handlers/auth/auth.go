@@ -8,42 +8,19 @@ import (
 	role_model "lets-go/models/role"
 	user_model "lets-go/models/user"
 	user_role_model "lets-go/models/user_role"
+	localTypes "lets-go/types"
 	"log"
 	"net/http"
 
 	"github.com/google/uuid"
 )
 
-type RegisterRequestData struct {
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-}
 
-type RegisterResponseData struct {
-	Status  string           `json:"status"`
-	Message string           `json:"message"`
-	Data    *user_model.User `json:"data"`
-}
-
-type LoginRequestData struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type LoginResponseData struct {
-	Status      string           `json:"status"`
-	Message     string           `json:"message"`
-	AccessToken string           `json:"accessToken"`
-	Data        *user_model.User `json:"data"`
-}
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var dataObj RegisterRequestData
+	var dataObj localTypes.RegisterRequestData
 
 	if err := json.NewDecoder(r.Body).Decode(&dataObj); err != nil {
 		http.Error(w, "invalid Json format", http.StatusBadRequest)
@@ -98,7 +75,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := RegisterResponseData{
+	response := localTypes.RegisterResponseData{
 		Status:  "success",
 		Message: "User successfully registered",
 		Data:    nil,
@@ -117,7 +94,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 func Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var dataObj LoginRequestData
+	var dataObj localTypes.LoginRequestData
 
 	if err := json.NewDecoder(r.Body).Decode(&dataObj); err != nil {
 		http.Error(w, "invalid Json format", http.StatusBadRequest)
@@ -186,7 +163,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	}
 
-	response := LoginResponseData{
+	response := localTypes.LoginResponseData{
 		Status:      "success",
 		Message:     "User successfully logged in",
 		AccessToken: accessToken,

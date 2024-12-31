@@ -29,7 +29,3 @@ func TestBuildImage(t *testing.T) {
 	t.Logf("created image with ID : %s and the docker version is : %s", dockerImage.ImageID, dockerImage.DockerImageRef.DockerVersion)
 
 }
-
-func TestCreateContainer(t *testing.T) {
-	
-}
