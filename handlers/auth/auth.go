@@ -136,6 +136,28 @@ func validateUser(dataObj *localTypes.LoginRequestData) (*user_model.User, error
 	return user, nil
 }
 
+type Tokens struct {
+	accessToken  string
+	refreshToken string
+}
+
+func generateTokens(userID string, listRoles []string) (*Tokens, error) {
+	accessToken, err := token.CreateAccessToken(userID, listRoles)
+
+	if err != nil {
+		loglib.LogError("error while creating access token", err)
+		return nil, err
+	}
+
+	refreshToken, err := token.CreateRefreshToken(userID, listRoles)
+	if err != nil {
+		loglib.LogError("error while creating refresh token", err)
+		return nil, err
+	}
+
+	return &Tokens{accessToken, refreshToken}, nil
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -168,17 +190,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := token.CreateAccessToken(user.ID, listRoles)
+	tokens, err := generateTokens(user.ID, listRoles)
 
 	if err != nil {
-		loglib.LogError("error while creating access token", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
-		return
-	}
-
-	refreshToken, err := token.CreateRefreshToken(user.ID, listRoles)
-	if err != nil {
-		loglib.LogError("error while creating refresh token", err)
+		loglib.LogError("error while creating tokens", err)
 		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
@@ -187,7 +202,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	refreshCookie := http.Cookie{
 		Name:     env.Get("REFRESH_HTTP_COOKIE_NAME"),
-		Value:    refreshToken,
+		Value:    tokens.refreshToken,
 		Path:     "/",
 		MaxAge:   cookieMaxAge,
 		HttpOnly: true,
@@ -208,7 +223,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	response := localTypes.LoginResponseData{
 		Status:      "success",
 		Message:     "User successfully logged in",
-		AccessToken: accessToken,
+		AccessToken: tokens.accessToken,
 		Data:        user,
 	}
 	http.SetCookie(w, &refreshCookie)
