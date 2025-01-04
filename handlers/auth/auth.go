@@ -2,6 +2,8 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"lets-go/libs/bcrypt"
 	"lets-go/libs/env"
 	localconstants "lets-go/libs/localConstants"
@@ -12,9 +14,42 @@ import (
 	user_role_model "lets-go/models/user_role"
 	localTypes "lets-go/types"
 	"net/http"
+	"reflect"
 
 	"github.com/google/uuid"
 )
+
+type Model interface {
+	Create() error
+	Delete() error
+	CheckDuplicate() (bool, error)
+}
+
+func createModel(model Model) error {
+	duplicate, err := model.CheckDuplicate()
+	modelName := reflect.ValueOf(model).Type().String()
+	var formated string
+	if err != nil {
+		formated = fmt.Sprintf("an error occured while checking for duplicates of %s", modelName)
+		loglib.LogError(formated, err)
+		return err
+	}
+
+	if duplicate {
+		formated = fmt.Sprintf("the %s already exists", modelName)
+		err = errors.New(formated)
+		loglib.LogError(formated, err)
+		return err
+	}
+
+	if err := model.Create(); err != nil {
+		formated = fmt.Sprintf("an error occured while creating %s", modelName)
+		loglib.LogError(formated, err)
+		return err
+	}
+
+	return nil
+}
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -43,13 +78,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		LastName:  dataObj.LastName,
 	}
 
-	if duplicate, err := user.CheckDuplicate(); err != nil || duplicate {
-		loglib.LogError("username or email already exists", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
-		return
-	}
-
-	if err := user.Create(); err != nil {
+	if err := createModel(user); err != nil {
 		loglib.LogError("Server Error Creating user", err)
 		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
@@ -63,20 +92,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user_role := &user_role_model.UserRole{
+	userRole := &user_role_model.UserRole{
 		ID:     uuid.New().String(),
 		UserID: user.ID,
 		RoleID: role.Name,
 	}
 
-	if duplicate, err := user_role.CheckDuplicate(); err != nil || duplicate {
-		loglib.LogError("server error while setting up the roles", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
-		return
-	}
-
-	if err := user_role.Create(); err != nil {
-		loglib.LogError("server error while creating a role", err)
+	if err := createModel(userRole); err != nil {
+		loglib.LogError("Server Error Creating userRole", err)
 		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
@@ -98,6 +121,21 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func validateUser(dataObj *localTypes.LoginRequestData) (*user_model.User, error) {
+	user, err := user_model.GetByEmail(dataObj.Email)
+	if err != nil {
+		loglib.LogError("the e-mail doesn't exist", err)
+		return nil, err
+	}
+
+	if !bcrypt.CheckPasswordHash(dataObj.Password, user.Password) {
+		loglib.LogError("wrong password", nil)
+		return nil, errors.New("wrong password")
+	}
+
+	return user, nil
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -108,14 +146,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := user_model.GetByEmail(dataObj.Email)
-	if err != nil {
-		http.Error(w, "invalid login", http.StatusUnauthorized)
-		return
-	}
+	user, err := validateUser(&dataObj)
 
-	if !bcrypt.CheckPasswordHash(dataObj.Password, user.Password) {
-		http.Error(w, "invalid login", http.StatusUnauthorized)
+	if err != nil {
+		loglib.LogError("invalid login", err)
+		http.Error(w, localconstants.UNAUTHORIZED, http.StatusUnauthorized)
 		return
 	}
 

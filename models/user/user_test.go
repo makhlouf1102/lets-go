@@ -135,3 +135,41 @@ func TestUserDelete(t *testing.T) {
 		t.Error("Expected error when getting deleted user, got nil")
 	}
 }
+
+func TestGetByExistingEmail(t *testing.T) {
+	// Prepare a user record in the test database
+	expectedUser := &User{
+		ID:        "testuseremail1",
+		Username:  "emailuser1",
+		Email:     "testemail1@example.com",
+		Password:  "password123",
+		FirstName: "Email",
+		LastName:  "User1",
+	}
+	err := expectedUser.Create()
+	if err != nil {
+		t.Fatalf("Failed to create test user for email retrieval test: %v", err)
+	}
+
+	// Test retrieving a user by existing email
+	retrievedUser, err := GetByEmail(expectedUser.Email)
+	if err != nil {
+		t.Fatalf("Failed to get user by existing email: %v", err)
+	}
+
+	// Verify the retrieved data matches the expected data
+	if retrievedUser.Email != expectedUser.Email ||
+		retrievedUser.Username != expectedUser.Username ||
+		retrievedUser.FirstName != expectedUser.FirstName ||
+		retrievedUser.LastName != expectedUser.LastName {
+		t.Errorf("Retrieved user data doesn't match expected values: got %+v, expected %+v", retrievedUser, expectedUser)
+	}
+}
+
+func TestGetNonExistingEmail(t *testing.T) {
+	// Test retrieving a user by a non-existent email
+	_, err := GetByEmail("nonexistent@example.com")
+	if err == nil {
+		t.Error("Expected error when getting user by non-existing email, got nil")
+	}
+}
