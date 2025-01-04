@@ -4,18 +4,17 @@ import (
 	"encoding/json"
 	"lets-go/libs/bcrypt"
 	"lets-go/libs/env"
+	localconstants "lets-go/libs/localConstants"
+	loglib "lets-go/libs/logLib"
 	"lets-go/libs/token"
 	role_model "lets-go/models/role"
 	user_model "lets-go/models/user"
 	user_role_model "lets-go/models/user_role"
 	localTypes "lets-go/types"
-	"log"
 	"net/http"
 
 	"github.com/google/uuid"
 )
-
-
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -28,8 +27,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hashedPassword, err := bcrypt.HashPassword(dataObj.Password)
+
 	if err != nil {
-		http.Error(w, "server error hashing password", http.StatusInternalServerError)
+		loglib.LogError("server error hashing password", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
@@ -43,19 +44,22 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if duplicate, err := user.CheckDuplicate(); err != nil || duplicate {
-		http.Error(w, "username or email already exists", http.StatusConflict)
+		loglib.LogError("username or email already exists", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
 	if err := user.Create(); err != nil {
-		http.Error(w, "Server Error Creating User", http.StatusInternalServerError)
+		loglib.LogError("Server Error Creating user", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
 	role, err := role_model.GetRole("User")
 
 	if err != nil {
-		http.Error(w, "server error while getting the roles", http.StatusInternalServerError)
+		loglib.LogError("server error while getting the roles", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
@@ -66,12 +70,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if duplicate, err := user_role.CheckDuplicate(); err != nil || duplicate {
-		http.Error(w, "server error while setting up the roles", http.StatusInternalServerError)
+		loglib.LogError("server error while setting up the roles", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
 	if err := user_role.Create(); err != nil {
-		http.Error(w, "Server Error roles", http.StatusInternalServerError)
+		loglib.LogError("server error while creating a role", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
@@ -85,7 +91,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "server error encoding response", http.StatusInternalServerError)
+		loglib.LogError("error while encoding response", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
@@ -121,23 +128,23 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Fatal("server error setting up roles")
-		http.Error(w, "server error while getting the user role", http.StatusInternalServerError)
+		loglib.LogError("error while setting up the roles", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
 	accessToken, err := token.CreateAccessToken(user.ID, listRoles)
 
 	if err != nil {
-		log.Fatal("server error creating access token")
-		http.Error(w, "server error", http.StatusInternalServerError)
+		loglib.LogError("error while creating access token", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
 	refreshToken, err := token.CreateRefreshToken(user.ID, listRoles)
 	if err != nil {
-		log.Fatal("server error creating refresh token")
-		http.Error(w, "server error", http.StatusInternalServerError)
+		loglib.LogError("error while creating refresh token", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 
@@ -175,8 +182,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Fatal("server error encoding response")
-		http.Error(w, "server error", http.StatusInternalServerError)
+		loglib.LogError("error while encoding response", err)
+		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
 		return
 	}
 }
