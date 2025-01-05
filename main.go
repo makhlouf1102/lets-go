@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"lets-go/database"
-	"lets-go/handlers/auth"
+	authHandler "lets-go/handlers/auth"
 	"lets-go/handlers/problem"
 	"lets-go/libs/dockerController"
 	"lets-go/libs/env"
@@ -35,8 +35,8 @@ func main() {
 	mux.HandleFunc("GET /register", views.RegisterPage)
 	mux.HandleFunc("GET /problems", views.ProblemsPage)
 	mux.HandleFunc("GET /solve-problem/{problemID}", views.SolveProblemsPage)
-	mux.Handle("POST /api/v1/auth/register", http.HandlerFunc(auth.Register))
-	mux.Handle("POST /api/v1/auth/login", http.HandlerFunc(auth.Login))
+	mux.Handle("POST /api/v1/auth/register", http.HandlerFunc(authHandler.Register))
+	mux.Handle("POST /api/v1/auth/login", http.HandlerFunc(authHandler.Login))
 	mux.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
 	mux.Handle("GET /api/v1/problem/{programmingLanguage}/{problemID}", http.HandlerFunc(problem.GetProblemCode))
 	mux.Handle("GET /api/v1/ping-protected", auth_middleware.NewTokenRefresher(http.HandlerFunc(ping)))
