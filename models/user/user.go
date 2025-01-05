@@ -1,4 +1,4 @@
-package user_model
+package userModel
 
 import (
 	"fmt"

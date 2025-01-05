@@ -1,55 +1,20 @@
-package auth
+package authHandler
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"lets-go/libs/bcrypt"
+	commonerrors "lets-go/libs/commonErrors"
 	"lets-go/libs/env"
 	localconstants "lets-go/libs/localConstants"
 	loglib "lets-go/libs/logLib"
-	"lets-go/libs/token"
 	role_model "lets-go/models/role"
-	user_model "lets-go/models/user"
+	userModel "lets-go/models/user"
 	user_role_model "lets-go/models/user_role"
 	localTypes "lets-go/types"
 	"net/http"
-	"reflect"
 
 	"github.com/google/uuid"
 )
-
-type Model interface {
-	Create() error
-	Delete() error
-	CheckDuplicate() (bool, error)
-}
-
-func createModel(model Model) error {
-	duplicate, err := model.CheckDuplicate()
-	modelName := reflect.ValueOf(model).Type().String()
-	var formated string
-	if err != nil {
-		formated = fmt.Sprintf("an error occured while checking for duplicates of %s", modelName)
-		loglib.LogError(formated, err)
-		return err
-	}
-
-	if duplicate {
-		formated = fmt.Sprintf("the %s already exists", modelName)
-		err = errors.New(formated)
-		loglib.LogError(formated, err)
-		return err
-	}
-
-	if err := model.Create(); err != nil {
-		formated = fmt.Sprintf("an error occured while creating %s", modelName)
-		loglib.LogError(formated, err)
-		return err
-	}
-
-	return nil
-}
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -57,7 +22,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	var dataObj localTypes.RegisterRequestData
 
 	if err := json.NewDecoder(r.Body).Decode(&dataObj); err != nil {
-		http.Error(w, "invalid Json format", http.StatusBadRequest)
+		commonerrors.DencodingError(w, err)
 		return
 	}
 
@@ -69,7 +34,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &user_model.User{
+	user := &userModel.User{
 		ID:        uuid.New().String(),
 		Username:  dataObj.Username,
 		Email:     dataObj.Email,
@@ -114,48 +79,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		loglib.LogError("error while encoding response", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
+		commonerrors.EncodingError(w, err)
 		return
 	}
 
-}
-
-func validateUser(dataObj *localTypes.LoginRequestData) (*user_model.User, error) {
-	user, err := user_model.GetByEmail(dataObj.Email)
-	if err != nil {
-		loglib.LogError("the e-mail doesn't exist", err)
-		return nil, err
-	}
-
-	if !bcrypt.CheckPasswordHash(dataObj.Password, user.Password) {
-		loglib.LogError("wrong password", nil)
-		return nil, errors.New("wrong password")
-	}
-
-	return user, nil
-}
-
-type Tokens struct {
-	accessToken  string
-	refreshToken string
-}
-
-func generateTokens(userID string, listRoles []string) (*Tokens, error) {
-	accessToken, err := token.CreateAccessToken(userID, listRoles)
-
-	if err != nil {
-		loglib.LogError("error while creating access token", err)
-		return nil, err
-	}
-
-	refreshToken, err := token.CreateRefreshToken(userID, listRoles)
-	if err != nil {
-		loglib.LogError("error while creating refresh token", err)
-		return nil, err
-	}
-
-	return &Tokens{accessToken, refreshToken}, nil
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -164,7 +91,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var dataObj localTypes.LoginRequestData
 
 	if err := json.NewDecoder(r.Body).Decode(&dataObj); err != nil {
-		http.Error(w, "invalid Json format", http.StatusBadRequest)
+		commonerrors.DencodingError(w, err)
 		return
 	}
 
@@ -232,8 +159,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		loglib.LogError("error while encoding response", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
+		commonerrors.EncodingError(w, err)
 		return
 	}
 }

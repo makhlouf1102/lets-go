@@ -1,5 +1,5 @@
 // models/user/user_test.go
-package user_model
+package userModel
 
 import (
 	"os"
