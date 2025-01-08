@@ -21,7 +21,7 @@ func main() {
 		log.Fatalf("Failed to run the containers: %v", err)
 	}
 
-	if err := database.InitializeDB("./database/database.db"); err != nil {
+	if err := database.InitializeDB("./database/database-test.db"); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer database.DB.Close()
