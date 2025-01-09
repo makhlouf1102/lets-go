@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"lets-go/libs/bcrypt"
 	commonerrors "lets-go/libs/commonErrors"
+	"lets-go/libs/commonFunctions"
+	"lets-go/libs/env"
 	loglib "lets-go/libs/logLib"
 	role_model "lets-go/models/role"
 	userModel "lets-go/models/user"
@@ -119,7 +121,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	expiresIn := 3600 * 24 * 7
 
-	cookies := generateCookies(*tokens, expiresIn)
+	refreshTokenName := env.Get("REFRESH_HTTP_COOKIE_NAME")
+
+	refreshCookie := commonFunctions.CreateSecureCookie(refreshTokenName, tokens.refreshToken, expiresIn, true)
+
+	isAuthCookie := commonFunctions.CreateSecureCookie("has-refresh-token", "true", expiresIn, false)
 
 	response := localTypes.LoginResponseData{
 		Status:      "success",
@@ -127,8 +133,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		AccessToken: tokens.accessToken,
 		Data:        user,
 	}
-	http.SetCookie(w, &cookies.RefreshCookie)
-	http.SetCookie(w, &cookies.IsAuthCookie)
+	http.SetCookie(w, &refreshCookie)
+	http.SetCookie(w, &isAuthCookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 

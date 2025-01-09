@@ -4,12 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"lets-go/libs/bcrypt"
-	"lets-go/libs/env"
 	loglib "lets-go/libs/logLib"
 	"lets-go/libs/token"
 	userModel "lets-go/models/user"
 	localTypes "lets-go/types"
-	"net/http"
 	"reflect"
 )
 
@@ -80,36 +78,4 @@ func generateTokens(userID string, listRoles []string) (*Tokens, error) {
 	}
 
 	return &Tokens{accessToken, refreshToken}, nil
-}
-
-type LocalCookies struct {
-	RefreshCookie http.Cookie
-	IsAuthCookie  http.Cookie
-}
-
-func generateCookies(tokens Tokens, expiresIn int) *LocalCookies {
-	refreshCookie := http.Cookie{
-		Name:     env.Get("REFRESH_HTTP_COOKIE_NAME"),
-		Value:    tokens.refreshToken,
-		Path:     "/",
-		MaxAge:   expiresIn,
-		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	isAuthCookie := http.Cookie{
-		Name:     "has-refresh-token",
-		Value:    "true",
-		Path:     "/",
-		MaxAge:   expiresIn,
-		HttpOnly: false,
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	return &LocalCookies{
-		RefreshCookie: refreshCookie,
-		IsAuthCookie:  isAuthCookie,
-	}
 }
