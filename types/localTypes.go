@@ -31,3 +31,6 @@ type LoginResponseData struct {
 	AccessToken string          `json:"accessToken"`
 	Data        *userModel.User `json:"data"`
 }
+
+type ContextKey string
+

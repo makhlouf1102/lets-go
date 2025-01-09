@@ -12,5 +12,15 @@ func EncodingError(responseWriter http.ResponseWriter, err error) {
 }
 
 func DencodingError(responseWriter http.ResponseWriter, err error) {
+	loglib.LogError("error while decoding response", err)
 	http.Error(responseWriter, localconstants.INVALID_JSON_FORMAT, http.StatusBadRequest)
+}
+
+func HttpError(responseWriter http.ResponseWriter, code int) {
+	http.Error(responseWriter, localconstants.ErrorMap[code], code)
+}
+
+func HttpErrorWithMessage(responseWriter http.ResponseWriter, err error, code int, message string) {
+	loglib.LogError(message, err)
+	http.Error(responseWriter, localconstants.ErrorMap[code], code)
 }

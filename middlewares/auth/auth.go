@@ -3,17 +3,15 @@ package auth_middleware
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	commonerrors "lets-go/libs/commonErrors"
+	"lets-go/libs/commonFunctions"
 	"lets-go/libs/env"
+	localconstants "lets-go/libs/localConstants"
 	"lets-go/libs/token"
-)
-
-var (
-	refreshSecret = env.Get("TOKEN_REFRESH_SECRET")
 )
 
 type TokenRefresher struct {
@@ -32,8 +30,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		accessToken, err := token.Parse(accessTokenStr, env.Get("TOKEN_ACCESS_SECRET"))
 		if err != nil {
-			log.Println("error parsing access token:", err)
-			http.Error(w, "server error", http.StatusInternalServerError)
+			commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "error parsing access token")
 			return
 		}
 
@@ -41,21 +38,19 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			accessClaims, err := token.ExtractClaims(accessToken, []byte(env.Get("TOKEN_ACCESS_SECRET")))
 			if err != nil {
-				http.Error(w, "server error", http.StatusInternalServerError)
+				commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "error extracting claim for access token")
 				return
 			}
 
 			userId, ok := accessClaims["user_id"].(string)
 			if !ok {
-				fmt.Println("userId, ok := accessClaims[\"user_id\"].(string)")
-				http.Error(w, "invalid token claims", http.StatusForbidden)
+				commonerrors.HttpErrorWithMessage(w, err, http.StatusForbidden, "invalid token claim for value user_id")
 				return
 			}
 
 			userRoles, ok := accessClaims["user_roles"].([]string)
 			if !ok {
-				fmt.Println("userRoles, ok := accessClaims[\"user_roles\"].([]string)")
-				http.Error(w, "invalid token claims", http.StatusForbidden)
+				commonerrors.HttpErrorWithMessage(w, err, http.StatusForbidden, "invalid token claim for value user_roles")
 				return
 			}
 
@@ -64,7 +59,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				UserRoles: userRoles,
 			}
 
-			ctx := context.WithValue(r.Context(), "protected_data", data)
+			ctx := context.WithValue(r.Context(), localconstants.PROTECTED_DATA_KEY, data)
 
 			t.handler.ServeHTTP(w, r.WithContext(ctx))
 			return
@@ -73,8 +68,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	refreshCookie, err := r.Cookie(env.Get("REFRESH_HTTP_COOKIE_NAME"))
 	if err != nil {
-		log.Println("failed to get refresh token cookie:", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusUnauthorized, "failed to get refresh token cookie")
 		return
 	}
 
@@ -82,76 +76,56 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	refreshToken, err := token.Parse(refreshTokenStr, env.Get("TOKEN_REFRESH_SECRET"))
 	if err != nil {
-		log.Println("error parsing refresh token:", err)
-		http.Error(w, "server error", http.StatusInternalServerError)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "error parsing refresh token")
 		return
 	}
 
 	if !refreshToken.Valid {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		commonerrors.HttpError(w, http.StatusForbidden)
 		return
 	}
 
 	refreshClaims, err := token.ExtractClaims(refreshToken, []byte(env.Get("TOKEN_REFRESH_SECRET")))
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		commonerrors.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
 	userId, ok := refreshClaims["user_id"].(string)
 	if !ok {
-		fmt.Println("refreshClaims[\"user_id\"].(string)")
-		http.Error(w, "invalid token claims", http.StatusForbidden)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusForbidden, "invalid refresh token claim for value user_id")
 		return
 	}
 
 	userRoles, ok := refreshClaims["user_roles"].([]string)
-	fmt.Println(userRoles)
 	if !ok {
-		fmt.Println("userRoles, ok := refreshClaims[\"user_roles\"].([]string)")
-		http.Error(w, "invalid token claims", http.StatusForbidden)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusForbidden, "invalid refresh token claim for value user_roles")
 		return
 	}
 
 	expirationTime, err := refreshClaims.GetExpirationTime()
 	if err != nil {
-		log.Println("error getting expiration time:", err)
-		http.Error(w, "server error", http.StatusInternalServerError)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "error getting expiration time")
 		return
 	}
 
 	if time.Now().After(expirationTime.Time) {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		commonerrors.HttpError(w, http.StatusForbidden)
 		return
 	}
 
 	if time.Now().Add(24 * time.Hour).After(expirationTime.Time) {
 		newRefreshToken, err := token.CreateRefreshToken(userId, userRoles)
 		if err != nil {
-			log.Println("error creating new refresh token:", err)
-			http.Error(w, "server error", http.StatusInternalServerError)
+			commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "error creating new refresh token")
 			return
 		}
 
-		newRefreshCookie := http.Cookie{
-			Name:     env.Get("REFRESH_HTTP_COOKIE_NAME"),
-			Value:    newRefreshToken,
-			Path:     "/",
-			MaxAge:   refreshCookie.MaxAge,
-			HttpOnly: true,
-			Secure:   false,
-			SameSite: http.SameSiteLaxMode,
-		}
+		refreshTokenName := env.Get("REFRESH_HTTP_COOKIE_NAME")
 
-		isAuthCookie := http.Cookie{
-			Name:     "has-refresh-token",
-			Value:    "true",
-			Path:     "/",
-			MaxAge:   refreshCookie.MaxAge,
-			HttpOnly: false,
-			Secure:   false,
-			SameSite: http.SameSiteLaxMode,
-		}
+		newRefreshCookie := commonFunctions.CreateSecureCookie(refreshTokenName, newRefreshToken, refreshCookie.MaxAge, true)
+
+		isAuthCookie := commonFunctions.CreateSecureCookie("has-refresh-token", "true", refreshCookie.MaxAge, false)
 
 		http.SetCookie(w, &newRefreshCookie)
 		http.SetCookie(w, &isAuthCookie)
@@ -174,8 +148,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Println("error encoding response:", err)
-		http.Error(w, "server error", http.StatusInternalServerError)
+		commonerrors.EncodingError(w, err)
 	}
 }
 
