@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"lets-go/libs/bcrypt"
 	commonerrors "lets-go/libs/commonErrors"
-	localconstants "lets-go/libs/localConstants"
 	loglib "lets-go/libs/logLib"
 	role_model "lets-go/models/role"
 	userModel "lets-go/models/user"
@@ -94,7 +93,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		loglib.LogError("invalid login", err)
-		http.Error(w, localconstants.UNAUTHORIZED, http.StatusUnauthorized)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusUnauthorized, "invalid login")
 		return
 	}
 
@@ -107,16 +106,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		loglib.LogError("error while setting up the roles", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "server error while setting up the roles")
 		return
 	}
 
 	tokens, err := generateTokens(user.ID, listRoles)
 
 	if err != nil {
-		loglib.LogError("error while creating tokens", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "server error while creating tokens")
 		return
 	}
 
