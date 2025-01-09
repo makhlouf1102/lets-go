@@ -28,8 +28,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := bcrypt.HashPassword(dataObj.Password)
 
 	if err != nil {
-		loglib.LogError("server error hashing password", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "server error hashing password")
 		return
 	}
 
@@ -43,16 +42,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := createModel(user); err != nil {
-		loglib.LogError("Server Error Creating user", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "Server Error Creating user")
 		return
 	}
 
 	role, err := role_model.GetRole("User")
 
 	if err != nil {
-		loglib.LogError("server error while getting the roles", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "server error while getting the roles")
 		return
 	}
 
@@ -63,8 +60,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := createModel(userRole); err != nil {
-		loglib.LogError("Server Error Creating userRole", err)
-		http.Error(w, localconstants.SERVER_ERROR, http.StatusInternalServerError)
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "server error creating a user role in DB")
 		return
 	}
 
