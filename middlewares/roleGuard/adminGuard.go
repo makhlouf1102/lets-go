@@ -1,4 +1,4 @@
-package logger_middleware
+package roleGuard
 
 import (
 	commonerrors "lets-go/libs/commonErrors"
