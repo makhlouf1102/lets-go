@@ -1,3 +1,9 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE role (
+    name TEXT PRIMARY KEY
+);
+
 CREATE TABLE user (
     user_id CHAR(36) PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
@@ -7,14 +13,10 @@ CREATE TABLE user (
     last_name TEXT
 );
 
-CREATE TABLE role (
-    name TEXT PRIMARY KEY
-);
-
 CREATE TABLE user_role (
     user_role_id CHAR(36) PRIMARY KEY,
     user_id CHAR(36) NOT NULL,
-    role_id CHAR(36) NOT NULL,
+    role_id TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(user_id),
     FOREIGN KEY (role_id) REFERENCES role(name)
 );
