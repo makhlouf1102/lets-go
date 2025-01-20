@@ -31,15 +31,30 @@ require(['vs/editor/editor.main'], () => {
     });
 });
 
-document.getElementById("submit-button").addEventListener("click", async (e) => {
-    // get the code from monaco editor
-    var code = window.editor.getValue()
+var programmingLanguagesSelect = document.getElementById("programming-language")
 
-    proxyApiService.runCode("js", code).then((data) => {
+programmingLanguagesSelect.addEventListener("sl-change", (e) => {
+    currentProggramingLanguage = e.target.value
+    alert(e.target.value)
+    proxyApiService.getProblemCode(currentProggramingLanguage, problemId)
+        .then((data) => {
+            sourceCode = data
+            window.editor.value = sourceCode
+        })
+        .catch((error) => {
+            console.log('Error', error)
+        })
+})
+
+document.getElementById("submit-button").addEventListener("click", async (e) => {
+    var code = window.editor.getValue()
+    var language = currentProggramingLanguage
+
+    proxyApiService.runCode(language, code).then((data) => {
         console.log(data)
     })
-    .catch((error) => {
-        console.error("Error", error)
-    })
+        .catch((error) => {
+            console.error("Error", error)
+        })
 })
 

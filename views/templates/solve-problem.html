@@ -106,6 +106,10 @@
 
 <body>
     <header>
+        <sl-button size="medium" type="default">
+            <a href="/problems">Back to Problems</a>
+        </sl-button>
+
         <sl-button variant="primary" size="medium">
             Run Code
         </sl-button>
@@ -124,7 +128,7 @@
 
         <div id="editor-wrapper">
             <div>
-                <sl-select value="javascript" label="Select a Language">
+                <sl-select id="programming-language" value="javascript" label="Select a Language">
                     <sl-option value="javascript">JavaScript</sl-option>
                     <sl-option value="go">Go</sl-option>
                     <sl-option value="python">Python</sl-option>
