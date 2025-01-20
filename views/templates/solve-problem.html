@@ -91,25 +91,34 @@
             gap: 1rem;
         }
 
-        #submit-button {
-            display: block;
-            width: 100%;
-            max-width: 300px;
-            margin-top: 1rem;
-            align-self: center;
+        header {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #f4f4f9;
+            border-bottom: 1px solid #ddd;
         }
     </style>
     <script type="module" src="/static/solve-problem.js"></script>
-        
+
 </head>
 
 <body>
-    {{template "header"}}
+    <header>
+        <sl-button variant="primary" size="medium">
+            Run Code
+        </sl-button>
 
+        <sl-button variant="success" size="medium" id="submit-button">
+            Submit Code
+        </sl-button>
+    </header>
     <main>
         <div id="problem">
             <h1>{{.Title}}</h1>
-            {{if eq .Difficulty "Easy"}}<sl-tag variant="success">Easy</sl-tag>{{else if eq .Difficulty "Medium"}}<sl-tag variant="warning">Medium</sl-tag>{{else}}<sl-tag variant="danger">Hard</sl-tag>{{end}}
+            {{if eq .Difficulty "Easy"}}<sl-tag variant="success">Easy</sl-tag>{{else if eq .Difficulty
+            "Medium"}}<sl-tag variant="warning">Medium</sl-tag>{{else}}<sl-tag variant="danger">Hard</sl-tag>{{end}}
             <p>{{.Description}}</p>
         </div>
 
@@ -127,7 +136,6 @@
             <div id="terminal-container">
                 <p>Terminal output will appear here...</p>
             </div>
-            <sl-button id="submit-button" variant="primary">Submit</sl-button>
         </div>
     </main>
 
