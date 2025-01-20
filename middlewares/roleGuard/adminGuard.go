@@ -1,8 +1,10 @@
 package roleGuard
 
 import (
+	"fmt"
 	commonerrors "lets-go/libs/commonErrors"
 	localconstants "lets-go/libs/localConstants"
+	loglib "lets-go/libs/logLib"
 	"net/http"
 	"slices"
 )
@@ -12,13 +14,14 @@ type AdminGuard struct {
 }
 
 func (a *AdminGuard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Admin guard")
 	protectedData, ok := r.Context().Value(localconstants.PROTECTED_DATA_KEY).(map[string]interface{})
 	if !ok {
 		commonerrors.HttpErrorWithMessage(w, nil, http.StatusInternalServerError, "invalid protected data type")
 		return
 	}
 
-	userRoles, exists := protectedData["userRoles"]
+	userRoles, exists := protectedData["user_roles"]
 	if !exists {
 		commonerrors.HttpErrorWithMessage(w, nil, http.StatusInternalServerError, "userRoles key missing")
 		return
@@ -35,6 +38,7 @@ func (a *AdminGuard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.handler.ServeHTTP(w, r)
+	loglib.LogError("it is not working", nil)
 }
 
 // NewLogger constructs a new Logger middleware handler

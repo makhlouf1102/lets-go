@@ -71,6 +71,10 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		commonerrors.HttpErrorWithMessage(w, err, http.StatusUnauthorized, "failed to get refresh token cookie")
 		return
 	}
+	if len(refreshCookie.Value) == 0 {
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusUnauthorized, "failed to get refresh token cookie")
+		return
+	}
 
 	refreshTokenStr := refreshCookie.Value
 
@@ -91,15 +95,23 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, ok := refreshClaims["user_id"].(string)
-	if !ok {
-		commonerrors.HttpErrorWithMessage(w, err, http.StatusForbidden, "invalid refresh token claim for value user_id")
+	var refreshClaimsParsed token.TokenClaim
+	var refreshClaimsBytes []byte
+
+	refreshClaimsBytes, err = json.Marshal(refreshClaims)
+
+	if err != nil {
+		commonerrors.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
-	userRoles, ok := refreshClaims["user_roles"].([]string)
-	if !ok {
-		commonerrors.HttpErrorWithMessage(w, err, http.StatusForbidden, "invalid refresh token claim for value user_roles")
+	if err := json.Unmarshal(refreshClaimsBytes, &refreshClaimsParsed); err != nil {
+		commonerrors.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	if len(refreshClaimsParsed.UserID) == 0 || len(refreshClaimsParsed.UserRoles) == 0 {
+		commonerrors.HttpErrorWithMessage(w, err, http.StatusForbidden, "invalid refresh token claim for value user_id or user_roles are empty")
 		return
 	}
 
@@ -115,7 +127,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if time.Now().Add(24 * time.Hour).After(expirationTime.Time) {
-		newRefreshToken, err := token.CreateRefreshToken(userId, userRoles)
+		newRefreshToken, err := token.CreateRefreshToken(refreshClaimsParsed.UserID, refreshClaimsParsed.UserRoles)
 		if err != nil {
 			commonerrors.HttpErrorWithMessage(w, err, http.StatusInternalServerError, "error creating new refresh token")
 			return
@@ -132,7 +144,7 @@ func (t *TokenRefresher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	newAccessToken, err := token.CreateAccessToken(userId, userRoles)
+	newAccessToken, err := token.CreateAccessToken(refreshClaimsParsed.UserID, refreshClaimsParsed.UserRoles)
 	if err != nil {
 		log.Println("error creating new access token:", err)
 		http.Error(w, "server error", http.StatusInternalServerError)

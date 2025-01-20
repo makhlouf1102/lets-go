@@ -9,6 +9,7 @@ import (
 	"lets-go/libs/env"
 	auth_middleware "lets-go/middlewares/auth"
 	logger_middleware "lets-go/middlewares/logger"
+	"lets-go/middlewares/roleGuard"
 	"lets-go/views"
 	"log"
 	"net/http"
@@ -39,7 +40,11 @@ func main() {
 	mux.Handle("POST /api/v1/auth/login", http.HandlerFunc(authHandler.Login))
 	mux.Handle("GET /api/v1/ping", http.HandlerFunc(ping))
 	mux.Handle("GET /api/v1/problem/{programmingLanguage}/{problemID}", http.HandlerFunc(problem.GetProblemCode))
-	mux.Handle("GET /api/v1/ping-protected", auth_middleware.NewTokenRefresher(http.HandlerFunc(ping)))
+	mux.Handle("GET /api/v1/ping-protected", auth_middleware.NewTokenRefresher(
+		roleGuard.NewAdminGuard(
+			http.HandlerFunc(ping),
+		),
+	))
 	mux.Handle("POST /api/v1/problem/runcode", http.HandlerFunc(problem.RunCode))
 
 	wrapperMux := logger_middleware.NewLogger(mux)
