@@ -2,6 +2,6 @@
 bin/
 *.exe
 test_docs/
-
+node_modules
 
 
