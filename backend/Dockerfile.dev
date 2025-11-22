@@ -1,0 +1,17 @@
+FROM golang:latest as dev
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Project-scoped install of air
+RUN go get -tool github.com/air-verse/air@latest
+
+COPY . .
+
+EXPOSE 8080
+
+# Use the air tool installed via go get -tool
+CMD ["go", "tool", "air"]
+
