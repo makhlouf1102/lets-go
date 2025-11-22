@@ -1,12 +1,18 @@
 package main 
 import (
-	"fmt"
-	"time"
+	"net/http"
+	"log"
+	"github.com/gin-gonic/gin"
 )
 func main() {
-	for {
-		fmt.Println("Hello, World 4 !")
-		time.Sleep(1 * time.Second)
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
 
+	if err:= r.Run(":8080"); err != nil {
+		log.Fatal("failed to run server: %v", err)
 	}
 }
