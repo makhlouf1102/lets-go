@@ -1,0 +1,23 @@
+# Use Alpine-based Node image for small footprint
+FROM node:alpine AS dev
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies first (leveraging cache)
+COPY package*.json ./
+RUN npm install
+
+# Copy all project files
+COPY . .
+
+# Expose the dev port
+EXPOSE 3000
+
+# Set environment explicitly to development
+ENV NODE_ENV=development
+
+RUN rm -rf node_modules package-lock.json && npm i
+
+# Run the development server
+CMD ["npm", "run", "dev"]
