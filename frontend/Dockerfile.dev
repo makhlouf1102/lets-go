@@ -16,6 +16,8 @@ EXPOSE 3000
 
 # Set environment explicitly to development
 ENV NODE_ENV=development
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
 
 RUN rm -rf node_modules package-lock.json && npm i
 
