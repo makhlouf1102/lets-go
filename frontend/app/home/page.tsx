@@ -11,21 +11,24 @@ type Problem = {
     difficulty: string;
 }
 
-function getProblems() {
-    return ResultAsync.fromPromise(fetch('http://localhost:8080/problems')
-        .then(res => res.json()),
-        (error) => new Error("Failed to fetch problems" + String(error)))
+async function getProblems() {
+    return fetch('http://localhost:8080/problems')
+        .then(res => res.json())
+        .catch(error => new Error("Failed to fetch problems" + String(error)))
 }
 
 export default function Home() {
     const { data, error, isLoading } = useSWR('/api/problems', getProblems)
 
-    if (isLoading) return <div>Loading...</div>
-    if (error) return <div>Error: {error.message}</div>
-
     return (
         <div>
-
+            {isLoading && <p>Loading...</p>}
+            {error && <p>Error: {error.message}</p>}
+            {data && <ul>
+                {data.data.map((problem: Problem) => (
+                    <li key={problem.id}>{problem.title}</li>
+                ))}
+            </ul>}
         </div>
     )
 }
