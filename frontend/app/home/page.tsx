@@ -1,13 +1,10 @@
-
 'use client'
-import { ResultAsync } from "neverthrow"
 import useSWR from "swr"
 
 type Problem = {
     id: number;
     title: string;
     description: string;
-    category: string;
     difficulty: string;
 }
 
@@ -24,11 +21,7 @@ export default function Home() {
         <div>
             {isLoading && <p>Loading...</p>}
             {error && <p>Error: {error.message}</p>}
-            {data && <ul>
-                {data.data.map((problem: Problem) => (
-                    <li key={problem.id}>{problem.title}</li>
-                ))}
-            </ul>}
+            {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
         </div>
     )
 }
