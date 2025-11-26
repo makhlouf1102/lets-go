@@ -9,7 +9,7 @@ services:
       - ./backend:/app
       - /app/tmp
     working_dir: /app
-    command: ["go", "tool", "air"]
+    command: [ "go", "tool", "air" ]
 
   frontend:
     build:
@@ -21,4 +21,4 @@ services:
       - ./frontend:/app
       - /app/node_modules
     working_dir: /app
-    command: ["npm", "run", "dev"]
+    command: [ "npm", "run", "dev" ]
