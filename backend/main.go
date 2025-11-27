@@ -76,6 +76,12 @@ func main() {
 		})
 	})
 
+	r.POST("/code/run", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "code run",
+		})
+	})
+
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("failed to run server:", err)
 	}
