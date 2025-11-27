@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -49,6 +50,29 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "all problems",
 			"data":    problems,
+		})
+	})
+
+	r.GET("/problems/:id", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "invalid id",
+			})
+			return
+		}
+
+		if id < 0 || id >= len(problems) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"message": "problem not found",
+			})
+			return
+		}
+
+		problem := problems[id]
+		c.JSON(http.StatusOK, gin.H{
+			"message": "problem",
+			"data":    problem,
 		})
 	})
 
