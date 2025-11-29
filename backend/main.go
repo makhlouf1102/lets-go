@@ -37,7 +37,7 @@ var problems = []Problem{
 	},
 }
 
-func main() {
+func setupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(cors.Default())
 	r.GET("/ping", func(c *gin.Context) {
@@ -45,15 +45,21 @@ func main() {
 			"message": "pong",
 		})
 	})
+	return r
+}
 
-	r.GET("/problems", func(c *gin.Context) {
+func getProblems(router *gin.Engine) *gin.Engine {
+	router.GET("/problems", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "all problems",
 			"data":    problems,
 		})
 	})
+	return router
+}
 
-	r.GET("/problems/:id", func(c *gin.Context) {
+func getProblemById(router *gin.Engine) *gin.Engine {
+	router.GET("/problems/:id", func(c *gin.Context) {
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -75,12 +81,23 @@ func main() {
 			"data":    problem,
 		})
 	})
+	return router
+}
 
-	r.POST("/code/run", func(c *gin.Context) {
+func runCode(router *gin.Engine) *gin.Engine {
+	router.POST("/code/run", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "code run",
 		})
 	})
+	return router
+}
+func main() {
+	r := setupRouter()
+
+	r = getProblems(r)
+	r = getProblemById(r)
+	r = runCode(r)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("failed to run server:", err)
