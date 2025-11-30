@@ -7,6 +7,7 @@ tool github.com/air-verse/air
 require (
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.11.0
+	github.com/go-playground/assert/v2 v2.2.0
 )
 
 require (
