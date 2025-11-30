@@ -24,6 +24,18 @@ type RunCodeRequest struct {
 	LanguageID int    `json:"language_id"`
 }
 
+type RunCodeResponseData struct {
+	Stdout string `json:"stdout"`
+	Stderr string `json:"stderr"`
+	Time   string `json:"time"`
+	Memory int    `json:"memory"`
+	Token  string `json:"token"`
+	Status struct {
+		ID          int    `json:"id"`
+		Description string `json:"description"`
+	} `json:"status"`
+}
+
 var problems = []Problem{
 	{
 		ID:          "1",
@@ -117,7 +129,7 @@ func runCode(router *gin.Engine) *gin.Engine {
 		}
 
 		// send a request to the judge
-		resp, err := http.Post("http://server:2358/submissions/?wait=true", "application/json", &buf)
+		resp, err := http.Post("http://server:2358/submissions/?base64_encoded=false&wait=true", "application/json", &buf)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "failed to run code",
@@ -136,9 +148,18 @@ func runCode(router *gin.Engine) *gin.Engine {
 			return
 		}
 
+		var response RunCodeResponseData
+		if err := json.Unmarshal(respBody, &response); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to unmarshal response",
+				"error":   err.Error(),
+			})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			"message": "code run",
-			"data":    respBody,
+			"message": "code running successfully",
+			"data":    response,
 		})
 	})
 	return router
