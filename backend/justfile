@@ -1,0 +1,5 @@
+# https://just.systems
+backend := "lets-go-backend-1"
+
+hurl test_file options:
+    docker exec -it {{backend}} bash -c "hurl {{options}} {{test_file}}"
