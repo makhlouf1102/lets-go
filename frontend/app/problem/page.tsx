@@ -13,9 +13,9 @@ export default function ProblemPage() {
                     <h1 className="font-bold text-lg">Problem Workspace</h1>
                 </div>
 
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
                     {/* Left Panel */}
-                    <div className="w-1/3 min-w-[300px] border-r border-base-300 flex flex-col bg-base-100">
+                    <div className="w-full lg:w-1/3 min-w-[300px] border-b lg:border-b-0 lg:border-r border-base-300 flex flex-col bg-base-100 h-1/2 lg:h-auto">
                         <div className="p-6 overflow-y-auto flex-1">
                             <div className="prose">
                                 <h2 className="text-2xl font-bold mb-4">Description</h2>
@@ -37,7 +37,7 @@ export default function ProblemPage() {
                     </div>
 
                     {/* Right Panel */}
-                    <div className="flex-1 flex flex-col min-w-0">
+                    <div className="flex-1 flex flex-col min-w-0 h-1/2 lg:h-auto">
                         {/* Code Section */}
                         <div className="flex-1 flex flex-col min-h-0">
                             <div className="bg-base-200 px-4 py-2 text-xs font-bold uppercase tracking-wider text-base-content/60 border-b border-base-300 select-none">
