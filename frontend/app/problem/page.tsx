@@ -1,7 +1,49 @@
 "use client"
 import Editor from '@monaco-editor/react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, RefObject } from 'react';
+import { editor } from 'monaco-editor';
+
+interface JudgeResponse {
+    stdout: string;
+    stderr: string;
+    time: string;
+    memory: number;
+    token: string;
+    status: {
+        id: number;
+        description: string;
+    }
+}
+
+interface RunCodeResponse {
+    data: JudgeResponse;
+    message: string;
+}
+
+
+
+async function runCode(editorRef: RefObject<editor.IStandaloneCodeEditor | null>): Promise<RunCodeResponse> {
+    try {
+        const response = await fetch('http://localhost:8080/code/run', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                source_code: editorRef?.current?.getValue() || '',
+                language_id: 63,
+            }),
+        });
+        const data = await response.json();
+        return data as RunCodeResponse;
+    } catch (error) {
+        alert(String(error));
+        console.error('Error running code:', error);
+        return { data: { stdout: '', stderr: '', time: '', memory: 0, token: '', status: { id: 0, description: '' } }, message: String(error) };
+    }
+}
+
 
 export default function ProblemPage() {
     const [direction, setDirection] = useState<'horizontal' | 'vertical'>('horizontal');
@@ -19,6 +61,21 @@ export default function ProblemPage() {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+    const [output, setOutput] = useState('');
+
+    function handleEditorDidMount(editor: editor.IStandaloneCodeEditor, _: any) {
+        editorRef.current = editor;
+    }
+
+    async function showValue() {
+        const result = await runCode(editorRef);
+        console.log(result);
+        setOutput(result.data.stdout);
+    }
+
+
 
     return (
         <div className="min-h-screen bg-base-200 p-8 flex items-center justify-center">
@@ -76,6 +133,7 @@ export default function ProblemPage() {
                                                 scrollBeyondLastLine: false,
                                                 padding: { top: 16, bottom: 16 }
                                             }}
+                                            onMount={handleEditorDidMount}
                                         />
                                     </div>
                                 </Panel>
@@ -86,10 +144,10 @@ export default function ProblemPage() {
                                 <Panel defaultSize={30} minSize={10} className="flex flex-col bg-base-100">
                                     <div className="bg-base-200 px-4 py-2 flex justify-between items-center border-b border-base-300 shrink-0">
                                         <span className="text-xs font-bold uppercase tracking-wider text-base-content/60 select-none">Response</span>
-                                        <button className="btn btn-primary btn-sm px-6">Run</button>
+                                        <button className="btn btn-primary btn-sm px-6" onClick={showValue}>Run</button>
                                     </div>
                                     <div className="p-4 font-mono text-sm overflow-y-auto flex-1 bg-base-100 text-base-content">
-                                        <span className="opacity-50 italic">Output will appear here after running the code...</span>
+                                        <span className="opacity-50 italic">{output}</span>
                                     </div>
                                 </Panel>
                             </PanelGroup>
