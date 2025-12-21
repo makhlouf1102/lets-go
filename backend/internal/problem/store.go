@@ -8,6 +8,7 @@ import (
 
 type Store interface {
 	GetProblem(ctx context.Context, problemID int64) (*Problem, error)
+	CreateProblem(ctx context.Context, problem Problem) error
 	ListTests(ctx context.Context, problemID int64) ([]TestProblem, error)
 }
 
@@ -47,3 +48,9 @@ func (ps *ProblemStore) ListTests(ctx context.Context, problemID int64) ([]TestP
 	}
 	return tests, nil
 }
+
+func (ps *ProblemStore) CreateProblem(ctx context.Context, problem Problem) error {
+	_, err := ps.db.Exec(ctx, "INSERT INTO problems (title, description, template, difficulty) VALUES ($1, $2, $3, $4)", problem.Title, problem.Description, problem.Template, problem.Difficulty)
+	return err
+}
+
