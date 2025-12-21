@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 export type Problem = {
     id: number;
@@ -40,9 +41,11 @@ export const ProblemAccordion: React.FC<ProblemAccordionProps> = ({ problem }) =
                         {problem.description}
                     </p>
                     <div className="flex justify-end pt-2">
-                        <button className="btn btn-primary btn-sm px-6 shadow-sm hover:shadow-md transition-all">
-                            Solve Challenge
-                        </button>
+                        <Link href={`/problem/${problem.id}`}>
+                            <button className="btn btn-primary btn-sm px-6 shadow-sm hover:shadow-md transition-all">
+                                Solve Challenge
+                            </button>
+                        </Link>
                     </div>
                 </div>
             </div>
