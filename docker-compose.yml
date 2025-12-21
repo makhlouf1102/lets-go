@@ -6,6 +6,7 @@ x-logging: &default-logging
 
 services:
   backend:
+    env_file: .env
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -35,8 +36,9 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - data:/var/lib/postgresql/data/
+      - api_data_postgres:/var/lib/postgresql/data/
     restart: always
+
   server:
     image: judge0/judge0:latest
     volumes:
@@ -60,7 +62,7 @@ services:
     image: postgres:16.2
     env_file: judge0.conf
     volumes:
-      - data:/var/lib/postgresql/data/
+      - judge0_data_postgres:/var/lib/postgresql/data/
     <<: *default-logging
     restart: always
 
@@ -72,4 +74,5 @@ services:
     restart: always
 
 volumes:
-  data:
+  api_data_postgres:
+  judge0_data_postgres:
