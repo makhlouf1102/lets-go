@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS tests;
+DROP TABLE IF EXISTS problems;
