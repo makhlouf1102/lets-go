@@ -85,27 +85,6 @@ func runMigrations() {
 
 }
 
-var problems = []Problem{
-	{
-		ID:          "1",
-		Title:       "Problem 1",
-		Description: "Description 1",
-		Difficulty:  "Easy",
-	},
-	{
-		ID:          "2",
-		Title:       "Problem 2",
-		Description: "Description 2",
-		Difficulty:  "Medium",
-	},
-	{
-		ID:          "3",
-		Title:       "Problem 3",
-		Description: "Description 3",
-		Difficulty:  "Hard",
-	},
-}
-
 func setupRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(cors.Default())
@@ -142,18 +121,27 @@ func getProblemById(router *gin.Engine) *gin.Engine {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "invalid id",
+				"error":   err.Error(),
 			})
 			return
 		}
 
-		if id < 0 || id >= len(problems) {
+		problem, err := ProblemStore.GetProblem(c.Request.Context(), int64(id))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to get problem",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		if problem == nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"message": "problem not found",
 			})
 			return
 		}
 
-		problem := problems[id]
 		c.JSON(http.StatusOK, gin.H{
 			"message": "problem",
 			"data":    problem,
