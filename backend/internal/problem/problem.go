@@ -2,7 +2,7 @@ package problem
 
 type Problem struct {
 	ID          int64
-	Name        string
+	Title       string
 	Description string
 	Template    string
 	Difficulty  string
