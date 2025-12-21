@@ -2,14 +2,23 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	migrate "github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Register postgres driver
+	_ "github.com/golang-migrate/migrate/v4/source/file"       // File source
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/makhlouf1102/lets-go-backend/pkg"
 )
 
 type Problem struct {
@@ -34,6 +43,44 @@ type RunCodeResponseData struct {
 		ID          int    `json:"id"`
 		Description string `json:"description"`
 	} `json:"status"`
+}
+
+var db *pgxpool.Pool
+var connString string
+
+func initDBConnection() {
+	ctx := context.Background()
+
+	pool, err := pgxpool.New(ctx, connString)
+	if err != nil {
+		log.Fatal("failed to connect to database:", err)
+	}
+	pool.Config().MaxConns = 10
+	pool.Config().MinConns = 1
+
+	db = pool
+	fmt.Println("Database connection pool initialized")
+}
+
+func runMigrations() {
+	m, err := migrate.New("file://./migrations", connString)
+	if err != nil {
+		log.Fatal("failed to create migration instance:", err)
+	}
+
+	m.Log = &pkg.StandardLogger{}
+	defer m.Close()
+
+	if err := m.Up(); err != nil {
+		if errors.Is(err, migrate.ErrNoChange) {
+			log.Println("Database is already up to date (no changes applied).")
+		} else {
+			log.Fatal("failed to run migrations:", err)
+		}
+	} else {
+		log.Println("Migrations applied successfully!")
+	}
+
 }
 
 var problems = []Problem{
@@ -165,6 +212,14 @@ func runCode(router *gin.Engine) *gin.Engine {
 	return router
 }
 func main() {
+	connString = os.Getenv("DATABASE_URL")
+	if connString == "" {
+		log.Fatal("DATABASE_URL is not set")
+	}
+	initDBConnection()
+	runMigrations()
+	defer db.Close()
+
 	r := setupRouter()
 
 	r = getProblems(r)
