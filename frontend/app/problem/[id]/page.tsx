@@ -3,6 +3,7 @@ import Editor from '@monaco-editor/react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { editor } from 'monaco-editor';
+import { useParams, useRouter } from 'next/navigation';
 
 interface JudgeResponse {
     stdout: string;
@@ -21,7 +22,18 @@ interface RunCodeResponse {
     message: string;
 }
 
+interface Problem {
+    id: number;
+    title: string;
+    description: string;
+    template: string;
+    difficulty: string;
+}
 
+interface ProblemApiResponse {
+    message: string;
+    data: Problem;
+}
 
 async function runCode(editorRef: RefObject<editor.IStandaloneCodeEditor | null>): Promise<RunCodeResponse> {
     try {
@@ -44,9 +56,29 @@ async function runCode(editorRef: RefObject<editor.IStandaloneCodeEditor | null>
     }
 }
 
+async function fetchProblem(id: string): Promise<Problem | null> {
+    try {
+        const response = await fetch(`http://localhost:8080/problems/${id}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch problem: ${response.statusText}`);
+        }
+        const data: ProblemApiResponse = await response.json();
+        return data.data;
+    } catch (error) {
+        console.error('Error fetching problem:', error);
+        return null;
+    }
+}
 
 export default function ProblemPage() {
+    const params = useParams();
+    const router = useRouter();
+    const id = params.id as string;
+
     const [direction, setDirection] = useState<'horizontal' | 'vertical'>('horizontal');
+    const [problem, setProblem] = useState<Problem | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const handleResize = () => {
@@ -62,6 +94,24 @@ export default function ProblemPage() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    useEffect(() => {
+        async function loadProblem() {
+            setLoading(true);
+            setError(null);
+            const problemData = await fetchProblem(id);
+            if (problemData) {
+                setProblem(problemData);
+            } else {
+                setError('Failed to load problem');
+            }
+            setLoading(false);
+        }
+
+        if (id) {
+            loadProblem();
+        }
+    }, [id]);
+
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
     const [output, setOutput] = useState('');
 
@@ -75,17 +125,52 @@ export default function ProblemPage() {
         setOutput(result.data.stdout);
     }
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-base-200 p-8 flex items-center justify-center">
+                <div className="text-center">
+                    <span className="loading loading-spinner loading-lg"></span>
+                    <p className="mt-4 text-lg">Loading problem...</p>
+                </div>
+            </div>
+        );
+    }
 
+    if (error || !problem) {
+        return (
+            <div className="min-h-screen bg-base-200 p-8 flex items-center justify-center">
+                <div className="card w-full max-w-md bg-base-100 shadow-xl">
+                    <div className="card-body text-center">
+                        <h2 className="card-title text-error justify-center">Error</h2>
+                        <p>{error || 'Problem not found'}</p>
+                        <div className="card-actions justify-center mt-4">
+                            <button className="btn btn-primary" onClick={() => router.back()}>
+                                Go Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-base-200 p-8 flex items-center justify-center">
             <div className="card w-full max-w-[95vw] h-[90vh] bg-base-100 shadow-xl overflow-hidden border border-base-300 rounded-2xl flex flex-col">
                 {/* Header */}
                 <div className="bg-base-100 border-b border-base-300 p-3 flex items-center gap-4 shrink-0">
-                    <button className="btn btn-ghost btn-circle btn-sm">
-                        <img src="https://placehold.co/24x24" alt="Back" className="w-6 h-6 rounded-full" />
+                    <button className="btn btn-ghost btn-circle btn-sm" onClick={() => router.back()}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
                     </button>
-                    <h1 className="font-bold text-lg">Problem Workspace</h1>
+                    <h1 className="font-bold text-lg">{problem.title}</h1>
+                    <span className={`badge ${problem.difficulty === 'easy' ? 'badge-success' :
+                            problem.difficulty === 'medium' ? 'badge-warning' :
+                                'badge-error'
+                        }`}>
+                        {problem.difficulty}
+                    </span>
                 </div>
 
                 <div className="flex-1 overflow-hidden">
@@ -93,21 +178,11 @@ export default function ProblemPage() {
                         {/* Left Panel */}
                         <Panel defaultSize={33} minSize={20} className="flex flex-col bg-base-100">
                             <div className="p-6 overflow-y-auto flex-1">
-                                <div className="prose">
+                                <div className="prose max-w-none">
                                     <h2 className="text-2xl font-bold mb-4">Description</h2>
-                                    <p className="text-base-content/80 mb-6">
-                                        This is a placeholder for the problem description. In a real application, this would contain the detailed problem statement, examples, and constraints.
-                                    </p>
-
-                                    <div className="divider my-6"></div>
-
-                                    <h3 className="text-xl font-bold mb-3">Instruction</h3>
-                                    <p className="text-base-content/80">
-                                        1. Read the problem description carefully.<br />
-                                        2. Write your solution in the code editor on the right.<br />
-                                        3. Click the "Run" button to test your code.<br />
-                                        4. Check the output in the response section.
-                                    </p>
+                                    <div className="text-base-content/80 mb-6 whitespace-pre-wrap">
+                                        {problem.description}
+                                    </div>
                                 </div>
                             </div>
                         </Panel>
@@ -126,7 +201,7 @@ export default function ProblemPage() {
                                         <Editor
                                             height="100%"
                                             defaultLanguage="javascript"
-                                            defaultValue="// Write your solution here"
+                                            defaultValue={problem.template || "// Write your solution here"}
                                             options={{
                                                 minimap: { enabled: false },
                                                 fontSize: 14,

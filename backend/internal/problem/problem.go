@@ -1,16 +1,16 @@
 package problem
 
 type Problem struct {
-	ID          int64
-	Title       string
-	Description string
-	Template    string
-	Difficulty  string
+	ID          int64  `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Template    string `json:"template"`
+	Difficulty  string `json:"difficulty"`
 }
 
 type TestProblem struct {
-	ID        int64
-	ProblemID int64
-	Input     string
-	Output    string
+	ID        int64  `json:"id"`
+	ProblemID int64  `json:"problem_id"`
+	Input     string `json:"input"`
+	Output    string `json:"output"`
 }
