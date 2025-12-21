@@ -18,6 +18,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Register postgres driver
 	_ "github.com/golang-migrate/migrate/v4/source/file"       // File source
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/makhlouf1102/lets-go-backend/internal/problem"
 	"github.com/makhlouf1102/lets-go-backend/pkg"
 )
 
@@ -47,6 +48,7 @@ type RunCodeResponseData struct {
 
 var db *pgxpool.Pool
 var connString string
+var ProblemStore problem.Store
 
 func initDBConnection() {
 	ctx := context.Background()
@@ -63,7 +65,7 @@ func initDBConnection() {
 }
 
 func runMigrations() {
-	m, err := migrate.New("file://./migrations", connString)
+	m, err := migrate.New("file://migrations", connString)
 	if err != nil {
 		log.Fatal("failed to create migration instance:", err)
 	}
@@ -117,6 +119,15 @@ func setupRouter() *gin.Engine {
 
 func getProblems(router *gin.Engine) *gin.Engine {
 	router.GET("/problems", func(c *gin.Context) {
+		problems, err := ProblemStore.ListProblems(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to list problems",
+				"error":   err.Error(),
+			})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"message": "all problems",
 			"data":    problems,
@@ -219,6 +230,8 @@ func main() {
 	initDBConnection()
 	runMigrations()
 	defer db.Close()
+
+	ProblemStore = problem.NewProblemStore(db)
 
 	r := setupRouter()
 
