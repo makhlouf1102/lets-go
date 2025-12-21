@@ -1,4 +1,4 @@
-CREATE TABLE problems (
+CREATE TABLE IF NOT EXISTS problems (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE problems (
     difficulty VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE tests (
+CREATE TABLE IF NOT EXISTS tests (
     id SERIAL PRIMARY KEY,
     problem_id INTEGER NOT NULL,
     input TEXT NOT NULL,
@@ -14,4 +14,16 @@ CREATE TABLE tests (
 );
 
 -- create reference between problem and test
-ALTER TABLE tests ADD FOREIGN KEY (problem_id) REFERENCES problems(id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'tests_problem_id_fkey'
+    ) THEN
+        ALTER TABLE tests 
+        ADD CONSTRAINT tests_problem_id_fkey 
+        FOREIGN KEY (problem_id) REFERENCES problems(id) 
+        ON DELETE CASCADE;
+    END IF;
+END $$;
