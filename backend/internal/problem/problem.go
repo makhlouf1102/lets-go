@@ -4,7 +4,7 @@ type Problem struct {
 	ID          int64  `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Template    string `json:"template"`
+	Signature   string `json:"signature"`
 	Difficulty  string `json:"difficulty"`
 }
 

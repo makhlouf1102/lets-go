@@ -5,7 +5,7 @@ export type Problem = {
     id: number;
     title: string;
     description: string;
-    template: string;
+    signature: string;
     difficulty: string;
 }
 

@@ -26,7 +26,7 @@ interface Problem {
     id: number;
     title: string;
     description: string;
-    template: string;
+    signature: string;
     difficulty: string;
 }
 
@@ -201,7 +201,7 @@ export default function ProblemPage() {
                                         <Editor
                                             height="100%"
                                             defaultLanguage="javascript"
-                                            defaultValue={problem.template || "// Write your solution here"}
+                                            defaultValue={problem.signature || "// Write your solution here"}
                                             options={{
                                                 minimap: { enabled: false },
                                                 fontSize: 14,

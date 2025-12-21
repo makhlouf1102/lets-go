@@ -25,7 +25,7 @@ func (ps *ProblemStore) GetProblem(ctx context.Context, problemID int64) (*Probl
 	row := ps.db.QueryRow(ctx, "SELECT * FROM problems WHERE id = $1", problemID)
 
 	var p Problem
-	if err := row.Scan(&p.ID, &p.Title, &p.Description, &p.Template, &p.Difficulty); err != nil {
+	if err := row.Scan(&p.ID, &p.Title, &p.Description, &p.Signature, &p.Difficulty); err != nil {
 		return nil, err
 	}
 
@@ -51,7 +51,7 @@ func (ps *ProblemStore) ListTests(ctx context.Context, problemID int64) ([]TestP
 }
 
 func (ps *ProblemStore) CreateProblem(ctx context.Context, problem Problem) error {
-	_, err := ps.db.Exec(ctx, "INSERT INTO problems (title, description, template, difficulty) VALUES ($1, $2, $3, $4)", problem.Title, problem.Description, problem.Template, problem.Difficulty)
+	_, err := ps.db.Exec(ctx, "INSERT INTO problems (title, description, signature, difficulty) VALUES ($1, $2, $3, $4)", problem.Title, problem.Description, problem.Signature, problem.Difficulty)
 	return err
 }
 
@@ -65,11 +65,10 @@ func (ps *ProblemStore) ListProblems(ctx context.Context) ([]Problem, error) {
 	var problems []Problem
 	for rows.Next() {
 		var p Problem
-		if err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.Template, &p.Difficulty); err != nil {
+		if err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.Signature, &p.Difficulty); err != nil {
 			return nil, err
 		}
 		problems = append(problems, p)
 	}
 	return problems, nil
 }
-
