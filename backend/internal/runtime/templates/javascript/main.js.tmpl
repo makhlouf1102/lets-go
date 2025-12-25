@@ -1,12 +1,12 @@
-// function that is a copy of the code sent by the user
+// function that is a copy of the code sent by the user (only one input and one output)
 {{ .Code }}
 
 const tests = {{ .Tests }}
 
 for (let i = 0; i < tests.length; i++) {
     const test = tests[i]
-    const result = problem(...test.input)
-    if (result !== test.expected) {
+    const result = problem(test.input)
+    if (result !== test.output) {
         console.log("Test failed")
         break
     }
