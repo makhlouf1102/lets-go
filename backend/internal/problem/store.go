@@ -10,7 +10,7 @@ type Store interface {
 	GetProblem(ctx context.Context, problemID int64) (*Problem, error)
 	CreateProblem(ctx context.Context, problem Problem) error
 	ListProblems(ctx context.Context) ([]Problem, error)
-	ListTests(ctx context.Context, problemID int64) ([]TestProblem, error)
+	ListTests(ctx context.Context, problemID int64) ([]InputOutput, error)
 }
 
 type ProblemStore struct {
@@ -32,17 +32,17 @@ func (ps *ProblemStore) GetProblem(ctx context.Context, problemID int64) (*Probl
 	return &p, nil
 }
 
-func (ps *ProblemStore) ListTests(ctx context.Context, problemID int64) ([]TestProblem, error) {
+func (ps *ProblemStore) ListTests(ctx context.Context, problemID int64) ([]InputOutput, error) {
 	rows, err := ps.db.Query(ctx, "SELECT * FROM tests WHERE problem_id = $1", problemID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var tests []TestProblem
+	var tests []InputOutput
 	for rows.Next() {
-		var t TestProblem
-		if err := rows.Scan(&t.ID, &t.ProblemID, &t.Input, &t.Output); err != nil {
+		var t InputOutput
+		if err := rows.Scan(&t.Input, &t.Output); err != nil {
 			return nil, err
 		}
 		tests = append(tests, t)

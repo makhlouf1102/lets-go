@@ -14,3 +14,8 @@ type TestProblem struct {
 	Input     string `json:"input"`
 	Output    string `json:"output"`
 }
+
+type InputOutput struct {
+	Input  string `json:"input"`
+	Output string `json:"output"`
+}
