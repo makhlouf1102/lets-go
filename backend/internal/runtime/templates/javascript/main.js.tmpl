@@ -1,0 +1,14 @@
+// function that is a copy of the code sent by the user
+{{ .Code }}
+
+const tests = {{ .Tests }}
+
+for (let i = 0; i < tests.length; i++) {
+    const test = tests[i]
+    const result = problem(...test.input)
+    if (result !== test.expected) {
+        console.log("Test failed")
+        break
+    }
+    console.log("Test passed")
+}
