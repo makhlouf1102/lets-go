@@ -42,7 +42,7 @@ func (ps *ProblemStore) ListTests(ctx context.Context, problemID int64) ([]Input
 	var tests []InputOutput
 	for rows.Next() {
 		var t InputOutput
-		if err := rows.Scan(&t.Input, &t.Output); err != nil {
+		if err := rows.Scan(nil, nil, &t.Input, &t.Output); err != nil {
 			return nil, err
 		}
 		tests = append(tests, t)
