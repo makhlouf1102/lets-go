@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -22,6 +23,10 @@ import (
 	"github.com/makhlouf1102/lets-go-backend/pkg"
 )
 
+var judgeIDs = map[string]int{
+	"javascript": 63,
+}
+
 type Problem struct {
 	ID          string `json:"id"`
 	Title       string `json:"title"`
@@ -32,6 +37,10 @@ type Problem struct {
 type RunCodeRequest struct {
 	SourceCode string `json:"source_code"`
 	LanguageID int    `json:"language_id"`
+}
+
+type SubmitSolutionRequest struct {
+	Code string `json:"code"`
 }
 
 type RunCodeResponseData struct {
@@ -150,6 +159,134 @@ func getProblemById(router *gin.Engine) *gin.Engine {
 	return router
 }
 
+func submitSolution(router *gin.Engine) *gin.Engine {
+	router.POST("/code/submit/:language_name/:problem_id", func(c *gin.Context) {
+		languageName := c.Param("language_name")
+		problemID, err := strconv.ParseInt(c.Param("problem_id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "invalid problem id",
+			})
+			return
+		}
+
+		languageID := judgeIDs[languageName]
+		if languageID == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "invalid language name",
+			})
+			return
+		}
+
+		// list all tests cases
+		testCases, err := ProblemStore.ListTests(c.Request.Context(), problemID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to list test cases",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		// turn tests into json
+		var tests string
+		jsonTests, err := json.Marshal(testCases)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to marshal test cases",
+				"error":   err.Error(),
+			})
+			return
+		}
+		tests = string(jsonTests)
+
+		// get code
+		var req SubmitSolutionRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "invalid request",
+			})
+			return
+		}
+
+		// bind code to run code request
+		// load code from main.js.tmpl and replace {{ .Code }} with req.Code
+		code, err := os.ReadFile("./internal/runtime/templates/javascript/main.js.tmpl")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to read file",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		t := template.Must(template.New("code").Parse(string(code)))
+		var buf bytes.Buffer
+
+		t.Execute(&buf,
+			map[string]interface{}{
+				"Code":  req.Code,
+				"Tests": tests,
+			},
+		)
+
+		// build a body to send to the judge
+		var body RunCodeRequest = RunCodeRequest{
+			SourceCode: string(buf.Bytes()),
+			LanguageID: languageID,
+		}
+
+		var jsonBody bytes.Buffer
+
+		if err := json.NewEncoder(&jsonBody).Encode(body); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to encode request",
+			})
+			return
+		}
+
+		// send a request to the judge
+		resp, err := http.Post("http://server:2358/submissions/?base64_encoded=false&wait=true", "application/json", &jsonBody)
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to run code",
+				"error":   err.Error(),
+			})
+			return
+		}
+		defer resp.Body.Close()
+		fmt.Println("step 2")
+
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to read response",
+				"error":   err.Error(),
+			})
+			return
+		}
+		fmt.Println("step 3")
+
+		var response RunCodeResponseData
+		if err := json.Unmarshal(respBody, &response); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to unmarshal response",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		fmt.Println(response)
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "all tests ran",
+			"data":    response,
+		})
+	})
+	return router
+}
+
 func runCode(router *gin.Engine) *gin.Engine {
 	// js id is 63
 	// 	{
@@ -177,6 +314,7 @@ func runCode(router *gin.Engine) *gin.Engine {
 		// send a request to the judge
 		resp, err := http.Post("http://server:2358/submissions/?base64_encoded=false&wait=true", "application/json", &buf)
 		if err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "failed to run code",
 				"error":   err.Error(),
@@ -226,6 +364,7 @@ func main() {
 	r = getProblems(r)
 	r = getProblemById(r)
 	r = runCode(r)
+	r = submitSolution(r)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("failed to run server:", err)
