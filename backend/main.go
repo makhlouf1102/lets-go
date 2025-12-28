@@ -18,6 +18,7 @@ import (
 	migrate "github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Register postgres driver
 	_ "github.com/golang-migrate/migrate/v4/source/file"       // File source
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/makhlouf1102/lets-go-backend/internal/problem"
 	"github.com/makhlouf1102/lets-go-backend/pkg"
@@ -59,8 +60,51 @@ var db *pgxpool.Pool
 var connString string
 var ProblemStore problem.Store
 
+func ensureDatabaseExists(ctx context.Context) error {
+	// This URL points to the default 'postgres' database
+	adminURL := "postgres://judge0:1234@db:5432/postgres?sslmode=disable"
+
+	pool, err := pgxpool.New(ctx, adminURL)
+	if err != nil {
+		return fmt.Errorf("failed to connect to postgres DB: %w", err)
+	}
+	defer pool.Close()
+
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to acquire connection: %w", err)
+	}
+	defer conn.Release()
+
+	dbName := "backend"
+
+	var exists bool
+	err = conn.QueryRow(ctx, "SELECT EXISTS(SELECT datname FROM pg_catalog.pg_database WHERE datname = $1)", dbName).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("failed to check database existence: %w", err)
+	}
+
+	if exists {
+		log.Printf("Database '%s' already exists", dbName)
+		return nil
+	}
+
+	_, err = conn.Exec(ctx, "CREATE DATABASE "+pgx.Identifier{dbName}.Sanitize())
+	if err != nil {
+		return fmt.Errorf("failed to create database: %w", err)
+	}
+
+	log.Printf("Database '%s' created successfully", dbName)
+	return nil
+}
+
 func initDBConnection() {
 	ctx := context.Background()
+
+	err := ensureDatabaseExists(ctx)
+	if err != nil {
+		log.Fatal("failed to ensure database exists:", err)
+	}
 
 	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
@@ -232,7 +276,7 @@ func submitSolution(router *gin.Engine) *gin.Engine {
 
 		// build a body to send to the judge
 		var body RunCodeRequest = RunCodeRequest{
-			SourceCode: string(buf.Bytes()),
+			SourceCode: buf.String(),
 			LanguageID: languageID,
 		}
 
