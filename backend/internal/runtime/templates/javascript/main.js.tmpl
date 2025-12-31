@@ -1,14 +1,12 @@
 // function that is a copy of the code sent by the user (only one input and one output)
-{{ .Code }}
-
 const tests = {{ .Tests }}
 
 for (let i = 0; i < tests.length; i++) {
     const test = tests[i]
-    const result = problem(test.input)
+    const result = {{ .Code }}(test.input)
     if (result !== test.output) {
-        console.log("Test failed")
+        console.log("Test failed on input \'", test.input, "\' expected \'", test.output, "\' got \'", result, "\'")
         break
     }
-    console.log("Test passed")
 }
+console.log("All tests passed")
