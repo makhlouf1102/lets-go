@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"text/template"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
