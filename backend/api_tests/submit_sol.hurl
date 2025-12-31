@@ -4,7 +4,7 @@ POST http://localhost:8080/code/submit/javascript/1
 Content-Type: application/json
 
 {
-    "code": "function test(input) { return 'input' }"
+    "code": "function test(input) { return input }"
 }
 HTTP 200
 
